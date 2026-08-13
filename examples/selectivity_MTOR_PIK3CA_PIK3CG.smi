@@ -1,0 +1,15 @@
+# Selectivity example — MTOR vs PIK3CA vs PIK3CG
+#
+# Run with:
+#   python -m kfm selectivity -t MTOR -t PIK3CA -t PIK3CG \
+#       -l @examples/selectivity_MTOR_PIK3CA_PIK3CG.smi
+#
+# The NAME of each compound encodes the measured KKB pIC50 against each of
+# the three kinases, in the order MTOR/PIK3CA/PIK3CG, and ends with the
+# kinase that genuinely binds it most tightly. That is the answer to check
+# the model's `Prefers` column against.
+#
+# SMILES<TAB>name
+CC(C)N1CCCN(CC1)c2nc(nc(n2)c3ccc(NC(=O)Nc4ccc(cc4)C(=O)N5CCNCC5)cc3)N6CCOCC6	cpd1_MTOR_3.31_PIK3CA_8.46_PIK3CG_7.65_best_PIK3CA
+CN(C)c1cccc(c1)c2ccnc3c2c(\C=C\4/Oc5cc(O)cc(O)c5C4=O)cn3C	cpd2_MTOR_9.22_PIK3CA_6.91_PIK3CG_6.70_best_MTOR
+FC(F)(F)c1ccc(NC(=O)Nc2ccc(cc2)c3nc(nc(n3)N4CCOCC4)N5CCOCC5)nc1	cpd3_MTOR_7.30_PIK3CA_6.69_PIK3CG_5.80_best_MTOR

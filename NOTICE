@@ -1,0 +1,48 @@
+Kinase Foundation Model
+Copyright (c) 2026 Eidogen-Sertanty, Inc.
+
+This product includes software developed by Eidogen-Sertanty, Inc.
+The source code in this repository is licensed under the Apache License,
+Version 2.0. You may obtain a copy of the License in the file LICENSE or at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+-----------------------------------------------------------------------------
+SEPARATELY LICENSED MODEL WEIGHTS
+-----------------------------------------------------------------------------
+This repository refers to, and its tools may download, trained model artefacts
+that are NOT covered by the Apache License. Those artefacts -- the .joblib
+random forests, the sequence-vector caches (kinase_vectors.npz,
+sequence_vectors.npz) and their index files -- are licensed for RESEARCH AND
+EVALUATION USE ONLY, under the terms in LICENSE-MODELS.txt.
+
+The weights are a derived work of the Eidogen-Sertanty Kinase Knowledgebase, a
+proprietary database (https://eidogen-sertanty.com/kinasekbmarvin.php).
+Permitted use is academic and non-profit research and teaching.
+See LICENSING.md for the rationale and LICENSE-MODELS.txt for the full terms.
+
+-----------------------------------------------------------------------------
+FIGURES
+-----------------------------------------------------------------------------
+The architecture diagrams in docs/ are taken from the model reports published at
+kinasefoundationmodel.com. They are Copyright (c) 2026 Eidogen-Sertanty, Inc.,
+all rights reserved, and are included here for documentation only. They are NOT
+licensed under Apache-2.0 and may not be reused or redistributed separately from
+this repository without permission.
+
+-----------------------------------------------------------------------------
+THIRD-PARTY COMPONENTS
+-----------------------------------------------------------------------------
+Protein sequence representations are computed with ESM2
+(facebook/esm2_t12_35M_UR50D), Copyright (c) Meta Platforms, Inc., distributed
+under the MIT License.
+
+This software depends on, but does not redistribute, the following, each under
+its own license:
+
+    RDKit                 BSD 3-Clause
+    scikit-learn          BSD 3-Clause
+    NumPy                 BSD 3-Clause
+    joblib                BSD 3-Clause
+    PyTorch               BSD 3-Clause
+    Hugging Face transformers   Apache License 2.0

@@ -1,0 +1,17 @@
+smiles,gene_a,gene_b,pic50_a,pic50_b,relation_a,relation_b
+COc1cc(Nc2c(C#N)cnc3cc(/C=C/CCN4CCN(C)CC4)c(OC)cc23)c(Cl)cc1Cl,ABL1,EGFR,9.4,5.48,=,=
+CNC(=O)c1cnc(N)c2c(-c3ccc(NC(=O)Nc4cccc(Cl)c4)cc3)csc12,ABL1,CDK2,9.3,5.1,=,=
+CN1CCN(Cc2ccc(-c3cnc4[nH]cc(-c5ccc6[nH]ccc6c5)c4c3)cc2)CC1,ABL1,MAPK14,8.34,4.92,=,=
+Cn1cc(/C=C2\Oc3cccc(O)c3C2=O)c2c(-c3ccc(C(=O)NCCO)cc3)ccnc21,ABL1,SRC,8.01,4.3,=,=
+COc1cc(C2=C(c3c[nH]c4ccccc34)C(=O)NC2=O)cc(OC)c1OC,ABL1,KDR,4.03,8.09,=,=
+CN(C)Cc1cc(C(=O)N[C@@H]2CCc3ccc(Oc4ccnc5c4CCC(=O)N5)cc3C2)cc(C(F)(F)F)c1,ABL1,LCK,8.92,6.21,=,=
+CN1C/C=C/CCOc2cccc(c2)-c2ccnc(n2)Nc2cccc(c2)C1,EGFR,CDK2,4.1,7.89,=,=
+Cc1nccn2c(-c3ccnc(NCC(C)(C)CO)n3)c(-c3ccc(F)cc3F)nc12,EGFR,MAPK14,5.8,9.9,=,=
+Cc1cc(Nc2ncc(C(=O)Nc3c(C)cccc3Cl)s2)nc(C)n1,EGFR,SRC,5.28,9.3,=,=
+C=CC(=O)Nc1cc2c(Nc3ccc(F)c(Cl)c3)ncnc2cc1OCCCN1CCOCC1,EGFR,KDR,9.34,4.6,=,=
+Brc1cccc(Nc2ncnc3cnc(NCCN4CCOCC4)cc23)c1,EGFR,INSR,9.15,4.3,=,<
+Brc1cccc(Nc2ncnc3cnc(NCCN4CCOCC4)cc23)c1,EGFR,SRC,9.15,4.3,=,<
+C#CCN(c1ccc2ncc(-c3cnn(C)c3)nc2c1)c1c(F)c(OC)cc(OC)c1F,KDR,FGFR1,7.65,5.0,=,<
+C#CCN(c1ccc2ncc(-c3cnn(C)c3)nc2c1)c1c(F)c(OC)cc(OC)c1F,KDR,FGFR3,7.65,5.0,=,<
+C#CCN(c1ccc2ncc(-c3cnn(C)c3)nc2c1)c1c(F)c(OC)cc(OC)c1F,KDR,FLT3,7.65,5.0,=,<
+C#Cc1cc(Nc2nccc(Oc3ccc(NC(=O)Nc4cc(C(C)(C)C)nn4C)c4ccccc34)n2)cc(C(=O)NCCOCCOCCOC)c1,SRC,SYK,8.3,6.0,=,<

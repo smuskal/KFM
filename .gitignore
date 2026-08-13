@@ -1,0 +1,26 @@
+# Model weights NEVER go in the repository. They are gigabytes, GitHub rejects
+# anything over 100 MB, and they are under a different licence from this code
+# (LICENSE-MODELS.txt). They are downloaded to ./kfm-models on first use.
+*.joblib
+*.npz
+bundles/
+models/
+
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+build/
+dist/
+*.egg-info/
+
+# Your own scratch space: anything here is invisible to git, which is where to
+# put a throwaway clone, downloaded bundles, or test output you do not want to
+# think about before committing.
+scratch/
+local-test/
+
+# Downloaded model bundles land here by default. Gigabytes, and separately
+# licensed: never commit them.
+kfm-models/

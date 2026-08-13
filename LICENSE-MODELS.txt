@@ -1,0 +1,231 @@
+KINASE FOUNDATION MODEL — MODEL WEIGHTS LICENSE
+RESEARCH AND EVALUATION USE ONLY
+Copyright (c) 2026 Eidogen-Sertanty, Inc. All rights reserved.
+
+=============================================================================
+1. SCOPE — WHAT THIS COVERS
+=============================================================================
+This license governs ONLY the trained model artefacts ("the Weights"):
+
+    any .joblib random forest, the ESM2-derived sequence vector caches
+    (kinase_vectors.npz, sequence_vectors.npz), the index and gene-map files
+    distributed with them, and any file or model derived from them.
+
+It does NOT govern the source code in this repository. All source code — the
+command line tools, the packaging, the tests and the documentation — is
+licensed separately under the Apache License, Version 2.0; see LICENSE.
+
+Where the two documents differ, this one governs the Weights and Apache-2.0
+governs the code. Nothing in the Apache license applies to the Weights, and in
+particular the Apache grant of commercial use and redistribution DOES NOT
+extend to them.
+
+=============================================================================
+2. WHY THE WEIGHTS ARE LICENSED SEPARATELY
+=============================================================================
+The Weights were trained on the Eidogen-Sertanty Kinase Knowledgebase (KKB), a
+proprietary, commercially licensed database of curated kinase structure-activity
+measurements. The Weights are a derived work of that database and encode value
+built over decades of curation. The code is ours to give away; that value is
+licensed to commercial customers and is not.
+
+=============================================================================
+3. GRANT — WHAT YOU MAY DO
+=============================================================================
+Subject to every term below, Eidogen-Sertanty, Inc. grants you a worldwide,
+royalty-free, non-exclusive, non-transferable, non-sublicensable and REVOCABLE
+license to download, install, run and modify the Weights for the following
+purposes ONLY:
+
+  (a) ACADEMIC AND NON-PROFIT RESEARCH. Research, teaching and study carried
+      out by a degree-granting institution, a non-profit research institute, or
+      a government research body, where the results are not used in or in
+      support of a commercial product, programme or service.
+
+  (b) INTERNAL EVALUATION. Assessment by any organisation, including a
+      commercial one, for a period of up to THIRTY (30) DAYS from first
+      download, for the sole purpose of deciding whether to obtain a commercial
+      license. Evaluation means testing the model's behaviour and accuracy on
+      reference or published compounds. It does NOT include applying the Weights
+      to your own programmes, series or compounds of interest, and it does not
+      include any use that informs a real decision. At the end of the thirty
+      days you must either obtain a commercial license or delete every copy.
+
+  (c) PUBLICATION of results obtained under (a) or (b), with the citation in
+      section 6.
+
+  (d) EXTENSION. Fitting additional decision trees on your own data and
+      merging them into any of the Weights, using the supplied `kfm extend`
+      tool, to produce a MERGED MODEL. Permitted on the same terms as (a) and
+      (b) and subject to every restriction in section 4.
+
+      A MERGED MODEL is a derivative work of the Weights and is covered by this
+      license in full. In particular:
+
+        - Under 3(a), academic and non-profit users may create, use and publish
+          results from a merged model without further permission.
+
+        - Under 3(b), a commercial organisation may create and evaluate a
+          merged model within the thirty-day evaluation period. Using one in or
+          in support of commercial discovery requires a commercial license, as
+          it does for the released Weights.
+
+        - REDISTRIBUTING a merged model, to anyone and by any means, requires a
+          separate written license. This includes publishing it, depositing it,
+          making it available through a service, and transferring it to another
+          legal entity, INCLUDING between affiliates of the same organisation.
+          Merging your data into the Weights does not make the result yours to
+          give away, any more than it makes our corpus yours.
+
+        - The base Weights remain subject to this license inside a merged model.
+          A merged model cannot be used to grant anyone rights to the Weights,
+          or to the Knowledgebase, that they do not already hold.
+
+        - Your input data remains entirely yours. Eidogen-Sertanty receives no
+          rights to it, and the tool sends nothing anywhere: the trees are fitted
+          on your machine and merged locally.
+
+        - The accuracy figures published for the released Weights DO NOT APPLY
+          to a merged model and must not be quoted for one. The merged manifest
+          records this.
+
+Any other use requires a separate written commercial license.
+
+WHAT THIS GRANT DOES NOT INCLUDE. It is a license to RUN the Weights for the
+purposes above, and nothing more. In particular, and without limiting sections
+4 and 5:
+
+  - It grants NO license, of any kind, to the Eidogen-Sertanty Kinase
+    Knowledgebase (KKB) itself, to any part of it, or to any data in it. Access
+    to the Knowledgebase is a separate commercial agreement. Being permitted to
+    run a model trained on the Knowledgebase is not permission to use the
+    Knowledgebase.
+
+  - It does NOT permit reverse engineering of the Weights, nor any attempt to
+    extract, reconstruct, infer or approximate the Knowledgebase or any portion
+    of it from the Weights or from their outputs — including by systematic or
+    bulk querying. See section 4.5, which applies in full to academic and
+    non-profit users under 3(a) exactly as it does to everyone else.
+
+=============================================================================
+4. RESTRICTIONS — WHAT REQUIRES A COMMERCIAL LICENSE
+=============================================================================
+Without a separate written license from Eidogen-Sertanty, Inc. you may NOT:
+
+  1. Use the Weights, or any output of them, in or in support of the discovery,
+     design, screening, prioritisation, optimisation or development of any
+     compound, series or programme intended for commercial exploitation. This
+     includes internal use by a commercial organisation beyond the 30-day
+     evaluation in 3(b), and use under contract or collaboration for a
+     commercial party.
+
+  2. Provide the Weights, or access to them, or any output of them, as a
+     service or deliverable to a third party — whether paid or free, hosted,
+     on-premises, or as part of consulting work. This includes any API, web
+     application, notebook service or pipeline made available to others.
+
+  3. Redistribute, publish, sublicense, resell, mirror or host the Weights, in
+     whole or in part, modified or unmodified. Link to the official download
+     instead. This restriction is what keeps the download count meaningful and
+     the terms attached.
+
+  4. Write or develop any derivative database, or any other database, model or
+     dataset based upon the Weights, their outputs, or any Confidential
+     Information embodied in them. This includes training, fine-tuning,
+     distilling or otherwise creating any model from the Weights or from their
+     outputs, and includes using predictions as labels, as a teacher signal, or
+     as training data of any kind. This restriction survives any modification
+     you make to the Weights and follows every copy of anything derived from
+     them.
+
+  5. Decompile, disassemble, or reverse engineer the Weights, in whole or in
+     part, or attempt by any means to extract, reconstruct, infer or
+     approximate ANY PORTION of the Kinase Knowledgebase from the Weights or
+     from their outputs. For the purposes of this license, and following the
+     Eidogen-Sertanty Database License Agreement, "ANY PORTION" means any of
+     the records in the Knowledgebase or any data from any field of the
+     Knowledgebase. Systematic or bulk querying of the Weights for the purpose
+     of assembling such a dataset is a breach of this section whether or not
+     the resulting values match any Knowledgebase record.
+
+  6. Use the Weights to provide processing services to third parties, or
+     otherwise use the Weights on a "service bureau" basis.
+
+  7. Remove, obscure or alter this license, the NOTICE file, the attribution,
+     or any notice distributed with the Weights. Every restriction here follows
+     any copy or modification you make.
+
+Commercial licensing, and access to the Kinase Knowledgebase itself:
+    https://eidogen-sertanty.com/kinasekbmarvin.php
+    https://eidogen-sertanty.com   ·   info@eidogen-sertanty.com
+
+=============================================================================
+5. NO OTHER RIGHTS
+=============================================================================
+No title to or ownership of the Weights, or of the Kinase Knowledgebase, or of
+any rights in the patents, copyrights and trade secrets in either, is
+transferred to you by virtue of this license. The Weights embody Eidogen-Sertanty
+trade secrets and are provided in confidence.
+
+All rights not expressly granted in section 3 are reserved. No rights are
+granted to any Eidogen-Sertanty trademark, to the Kinase Knowledgebase, or to
+any patent, by implication, estoppel or otherwise.
+
+=============================================================================
+6. ATTRIBUTION
+=============================================================================
+Any publication or public presentation of results obtained with the Weights
+must cite:
+
+    Kinase Foundation Model (v2), Eidogen-Sertanty, Inc., 2026.
+    Trained on the Eidogen-Sertanty Kinase Knowledgebase.
+    https://kinasefoundationmodel.com
+
+=============================================================================
+7. THIRD-PARTY COMPONENTS
+=============================================================================
+The Weights embed protein sequence representations computed with ESM2
+(facebook/esm2_t12_35M_UR50D), distributed by Meta Platforms, Inc. under the
+MIT license. That license covers the ESM2 checkpoint and is unaffected by this
+one. Nothing here purports to relicense ESM2.
+
+=============================================================================
+8. NO WARRANTY — INCLUDING A SCIENTIFIC ONE
+=============================================================================
+THE WEIGHTS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, ACCURACY AND NONINFRINGEMENT. IN NO EVENT
+SHALL EIDOGEN-SERTANTY, INC. BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE WEIGHTS OR THEIR USE.
+
+Specifically, and without limiting the above: these models return the
+probability that one thing ranks above another. They do not return a potency,
+an affinity, or a safety assessment, and their published accuracies were
+measured on particular test distributions that may not resemble yours. They
+must not be used as the sole basis for any decision affecting human or animal
+health.
+
+=============================================================================
+9. TERM AND TERMINATION
+=============================================================================
+This license takes effect when you download the Weights and continues until
+terminated. A breach of section 3 (scope of the grant) or section 4
+(restrictions) is cause for IMMEDIATE termination without notice; any other
+breach terminates this license if it is not remedied within thirty (30) days of
+notice. Eidogen-Sertanty, Inc. may revoke this license at any time on notice.
+
+On termination you must immediately discontinue all use of the Weights, remove
+them from every machine on which they were installed, and delete or destroy
+every copy in your possession or control, including any model, dataset or
+database derived from them.
+
+Sections 4(4), 4(5), 4(6), 5, 6, 8 and this section survive termination.
+
+=============================================================================
+10. ACCEPTANCE
+=============================================================================
+Downloading, installing or using the Weights constitutes acceptance of this
+license. The command line tool requires you to pass --accept-licence before it
+will download anything, which records that acceptance was explicit. If you do
+not accept these terms, do not download the Weights.

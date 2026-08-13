@@ -1,0 +1,5 @@
+# ONLY needed to score a protein sequence the model was not trained on.
+# The 500 (potency) / 497 (selectivity) shipped kinases need nothing beyond
+# requirements.txt -- their vectors travel with the bundle.
+torch==2.9.1
+transformers==4.57.3

@@ -1,0 +1,5 @@
+COc1ccc(cc1)S(=O)(=O)N(CC(C)C)CC(O)C(Cc2ccccc2)NC(=O)C3CN(C(=O)O3)c4cccc(c4)C(=O)C	ABL1_rank1_KKB_pIC50_12.100
+COc1ccc(cc1F)S(=O)(=O)N(CC(C)C)CC(O)C(Cc2ccccc2)NC(=O)C3CN(C(=O)O3)c4cccc(c4)C(F)(F)F	ABL1_rank2_KKB_pIC50_10.140
+COc1ccc(cc1)S(=O)(=O)N(CC(C)C)CC(O)C(CCCCC=C)NC(=O)c2cccc(O)c2OCCCC=C	ABL1_rank3_KKB_pIC50_8.050
+CN1CCC(C(O)C1)c2c(O)cc(O)c3C(=O)C=C(Oc23)c4ccccc4Cl	ABL1_rank4_KKB_pIC50_6.050
+CC1=CN2CC(=O)NN=C2C=C1	ABL1_rank5_KKB_pIC50_4.000

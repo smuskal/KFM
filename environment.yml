@@ -1,0 +1,49 @@
+# Conda environment for the Kinase Foundation Model command line tools.
+#
+#   conda env create -f environment.yml
+#   conda activate kfm
+#
+# WHY THE SCIENTIFIC PACKAGES COME FROM pip, NOT conda
+# ----------------------------------------------------
+# Conda supplies the interpreter and pip supplies everything else, deliberately.
+# Mixing conda-forge's rdkit with pip's numpy/scipy in one environment breaks
+# scipy's extension modules — the two build against different binary stacks.
+# Picking one packaging system for the scientific libraries avoids that whole
+# class of problem, and pip is the one whose exact versions were used to fit and
+# verify these forests.
+#
+# WHY THE VERSIONS ARE REPEATED HERE INSTEAD OF `-r requirements.txt`
+# -------------------------------------------------------------------
+# Conda copies this file's pip block to a temporary file before running it, so a
+# relative `-r requirements.txt` resolves against /tmp and fails with
+# "Could not open requirements file". Repeating the pins is the reliable form.
+# They must match requirements.txt exactly — `tests/test_kfm.py` asserts that, so
+# the two cannot drift.
+#
+# The pins are not suggestions. A joblib-pickled random forest is a pickled
+# object graph: a different scikit-learn either refuses to load it or loads it
+# and scores differently, silently. `python -m pytest tests/` checks the two
+# published worked examples and will fail loudly if the environment drifts.
+name: kfm
+channels:
+  - conda-forge
+dependencies:
+  # 3.10 is what fitted the models. 3.11 and 3.12 were verified to reproduce
+  # every reference prediction bit-identically, so any of the three is fine.
+  - python=3.11
+  - pip
+  - pip:
+      - scikit-learn==1.7.2
+      - numpy==2.2.6
+      - joblib==1.5.3
+      # NOT pinned: rdkit published its last x86_64 macOS wheel at 2025.9.3,
+      # so an exact pin makes this file uninstallable on Intel Macs and on
+      # Apple Silicon running an Intel Python under Rosetta. rdkit never
+      # touches the pickled forest; 2025.03.6 and 2025.09.5 were verified to
+      # give predictions identical to ten decimal places.
+      - rdkit>=2024.3.1
+      - pytest
+      # Only needed to score a protein sequence the model was not trained on;
+      # the shipped kinases need none of it. Uncomment to enable that path.
+      # - torch==2.9.1
+      # - transformers==4.57.3
