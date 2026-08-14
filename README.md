@@ -27,6 +27,17 @@ Installing one does not install the other. Each section below is self-contained:
 install, hardware, and how to run, start to finish. **Most people want version
 2** — it is the current release, and its section is open by default.
 
+> ### 🧬 Not working on kinases?
+>
+> **Nothing in the method is kinase-specific.** The featuriser, the pairwise
+> formulation, the label-reversal swap, the censored-value logic and the forest
+> work on any protein family for which you have sequences and activity data.
+> Give `kfm buildnew` one measurement per row — `smiles`, `sequence`, `pic50` —
+> and it builds the comparisons for you, for either model, from the same file.
+>
+> **→ [`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md)** — written from an
+> end-to-end port of both layouts to GPCRs, 1.09M ChEMBL rows over 405 receptors.
+
 ---
 
 ## Licensing — the code and the weights differ
@@ -315,9 +326,10 @@ number to read before trusting a model: a file rich enough for potency is often
 thin for selectivity, since selectivity needs the same compound measured on two
 targets.
 
-**Another target family?** Nothing in the method is kinase-specific. See
-[`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md), written from an end-to-end
-port of both layouts to GPCRs.
+> **🧬 Another target family?** Nothing here is kinase-specific — the same two
+> commands build potency and selectivity models for any family from the same
+> measurement file. **[`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md)** has
+> the full procedure, from an end-to-end GPCR port.
 
 **Qualifiers invert on conversion.** Our `relation` describes the potency: `>`
 means at least this potent. ChEMBL and most assay exports put the qualifier on
