@@ -27,14 +27,14 @@ Installing one does not install the other. Each section below is self-contained:
 install, hardware, and how to run, start to finish. **Most people want version
 2** — it is the current release, and its section is open by default.
 
+[![Not working on kinases? Nothing in the method is kinase-specific. The same two commands build potency and selectivity models for any protein family, from one measurement per row.](docs/other-families-banner.png)](docs/OTHER_FAMILIES.md)
+
 > [!TIP]
-> ### 🧬 Not working on kinases?
->
-> **Nothing in the method is kinase-specific.** The featuriser, the pairwise
-> formulation, the label-reversal swap, the censored-value logic and the forest
-> work on any protein family for which you have sequences and activity data.
-> Give `kfm buildnew` one measurement per row — `smiles`, `sequence`, `pic50` —
-> and it builds the comparisons for you, for either model, from the same file.
+> The featuriser, the pairwise formulation, the label-reversal swap, the
+> censored-value logic and the forest work on any protein family for which you
+> have sequences and activity data. Give `kfm buildnew` one measurement per row —
+> `smiles`, `sequence`, `pic50` — and it builds the comparisons for you, for
+> either model, from the same file.
 >
 > **→ [`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md)** — written from an
 > end-to-end port of both layouts to GPCRs, 1.09M ChEMBL rows over 405 receptors.
