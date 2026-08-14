@@ -310,6 +310,15 @@ column of `A`/`B`. Raw sequences are embedded with the bundled ESM2 recipe.
 Either way, every usable comparison is entered **twice**, once in each order
 with the label inverted. Do not supply both orders yourself.
 
+Both tools report how many measurements they could **not** pair, which is the
+number to read before trusting a model: a file rich enough for potency is often
+thin for selectivity, since selectivity needs the same compound measured on two
+targets.
+
+**Another target family?** Nothing in the method is kinase-specific. See
+[`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md), written from an end-to-end
+port of both layouts to GPCRs.
+
 **Qualifiers invert on conversion.** Our `relation` describes the potency: `>`
 means at least this potent. ChEMBL and most assay exports put the qualifier on
 the concentration, so `IC50 > 1000 nM` becomes `pic50 6.0, relation <`. Copying

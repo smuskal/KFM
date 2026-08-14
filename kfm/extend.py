@@ -305,10 +305,30 @@ def pair_measurements(rows, kind, cap=MEASURE_CAP_DEFAULT, seed=0, log=lambda s:
                             tgt_key + "_a": ta, tgt_key + "_b": tb})
             out.append(row)
 
-    log(f"  groups with 2+ members                   {sum(1 for m in groups.values() if len(m)>1):,}")
+    # A measurement is only usable if something else shares its group: another
+    # ligand on the same target for potency, another target for the same ligand
+    # for selectivity. Report what fell out, because a file that looks large can
+    # be almost entirely unpairable for one of the two layouts and the user has
+    # no other way to see it.
+    paired_by = "target" if kind == "LSL" else "ligand"
+    orphan_groups = [k for k, m in groups.items() if len(m) < 2]
+    orphan_rows = sum(len(groups[k]) for k in orphan_groups)
+    used_rows = len(flat) - orphan_rows
+    log(f"  measurements usable                      {used_rows:,} of {len(flat):,}")
+    if orphan_rows:
+        log(f"  UNUSED, no second measurement to pair with against the same "
+            f"{'target' if kind == 'LSL' else 'ligand'}:")
+        log(f"    measurements                           {orphan_rows:,} "
+            f"({100.0*orphan_rows/len(flat):.1f}%)")
+        log(f"    {paired_by}s with only one measurement{'':<3} {len(orphan_groups):,}")
+    log(f"  {paired_by}s with 2+ measurements{'':<14} "
+        f"{sum(1 for m in groups.values() if len(m) > 1):,}")
     if capped:
         log(f"  groups capped at {cap:,} pairs{'':<12} {capped:,}")
     log(f"  comparisons generated                    {len(out):,}")
+    if not out:
+        log(f"  Nothing pairable. For {'potency' if kind == 'LSL' else 'selectivity'} "
+            f"you need at least one {paired_by} carrying two measurements.")
     return out
 
 
