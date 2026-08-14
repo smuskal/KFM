@@ -27,6 +27,7 @@ Installing one does not install the other. Each section below is self-contained:
 install, hardware, and how to run, start to finish. **Most people want version
 2** — it is the current release, and its section is open by default.
 
+> [!TIP]
 > ### 🧬 Not working on kinases?
 >
 > **Nothing in the method is kinase-specific.** The featuriser, the pairwise
@@ -326,6 +327,7 @@ number to read before trusting a model: a file rich enough for potency is often
 thin for selectivity, since selectivity needs the same compound measured on two
 targets.
 
+> [!TIP]
 > **🧬 Another target family?** Nothing here is kinase-specific — the same two
 > commands build potency and selectivity models for any family from the same
 > measurement file. **[`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md)** has
