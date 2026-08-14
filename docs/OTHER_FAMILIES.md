@@ -140,27 +140,38 @@ salts and tautomers with different InChIKeys collapse onto the same fingerprint.
 In the GPCR build, 3,979 of 43,508 held-out ligands still sat at Tanimoto 1.0
 despite a compound-disjoint split.
 
-**Run the sequence ablation. The answer is family-specific.** Re-score with the
-sequence block zeroed, and separately with the sequence vectors *permuted* —
-each target consistently given another target's embedding, so target identity
-survives as a lookup key while its correspondence to biology is destroyed. The
-gap between those two says whether the model is using the embedding as biology
-or as a per-target index.
+**Run the sequence ablation, and be careful which one you run.** There are two
+variants and they answer different questions. Do not compare their numbers.
+
+*Refit ablation.* Retrain the model with the sequence block zeroed, and again
+with the sequence vectors **permuted** — each target consistently given another
+target's embedding, so identity survives as a lookup key while its
+correspondence to biology is destroyed. If a refit on permuted vectors scores as
+well as the original, the model never needed the biology: it relearns the
+permuted vector as an arbitrary per-target index. This is the diagnostic
+Mattsson and Walters describe, and it is the one to run.
+
+In the GPCR build, refitted on a temporal split:
 
 | | full | zeroed | permuted |
 |---|---|---|---|
-| Kinase, released potency model, held-out ChEMBL | 0.7188 | 0.6140 (−0.105) | 0.6033 (−0.116) |
-| GPCR build, temporally split | 0.607 | 0.553 (−0.054) | 0.601 (−0.007) |
+| potency | 0.607 | 0.553 (−0.054) | 0.601 (−0.007) |
+| selectivity | 0.663 | 0.491 (−0.172) | 0.659 (−0.004) |
 
-On the GPCR model permuting costs almost nothing: the embedding is acting as an
-arbitrary per-target index rather than as transferable biology, which is the
-proteochemometric failure mode Mattsson and Walters describe. On the released
-kinase model the opposite holds — permuting costs *more* than zeroing, which is
-what you see when a model has learned real sequence structure and is then handed
-misleading vectors. Neither result predicts the other. Measure your own.
+Zeroing costs real accuracy, so knowing *which* receptor matters. Permuting costs
+almost nothing, so the embedding is acting as a per-target index rather than as
+transferable biology — the proteochemometric failure mode.
 
-*Kinase figures: 3,720 held-out ChEMBL comparisons across 465 genes, mean of five
-random derangements, standard deviation 0.005.*
+*Re-score ablation.* Feeding permuted vectors to an **already-trained** model at
+prediction time is a different measurement. It cannot come out neutral: the model
+was fitted against one mapping and is being handed another, so a large drop is
+expected whatever the embedding means. On the released kinase potency model,
+re-scoring 3,720 held-out ChEMBL comparisons gave 0.7188 full, 0.6140 zeroed and
+0.6033 permuted. That says the model relies on the specific mapping it learned.
+It does **not** answer the question the refit answers, and it neither confirms
+nor contradicts the GPCR result.
+
+If you only have time for one, do the refit.
 
 ## 5. Checklist
 
@@ -171,6 +182,7 @@ random derangements, standard deviation 0.005.*
 - [ ] The UNUSED count read, and acceptable for the model you are building
 - [ ] No compound in both the training and held-out splits
 - [ ] Accuracy reported per novelty tier, not only pooled
-- [ ] Accuracy compared against zeroed and permuted sequence baselines
+- [ ] Accuracy compared against zeroed and permuted sequence baselines,
+      **refitted** rather than re-scored
 - [ ] The released operating point re-measured on your own held-out data; it
       does not carry over
