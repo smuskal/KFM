@@ -7,16 +7,27 @@ protein family for which you have sequences and paired activity data.
 This has been done end to end at least once, for GPCRs, using a ChEMBL pull of
 1.09M activity rows across 405 receptors.
 
-## What KFM supplies, and what you supply
+## Who does what
 
-| | |
+**You do not build comparisons. KFM does.** You supply one measurement per row
+and clean data; everything from pairing onwards is done for you.
+
+| Step | Who |
 |---|---|
-| **KFM supplies** | The feature recipe (Morgan count fingerprint r=2/1024 plus 14 RDKit descriptors; ESM2 `t12_35M_UR50D` mean-pooled sequence embedding), the pairwise layouts, pairing, the A/B label-reversal swap, the censored-value logic, and the forest. None of it assumes a kinase. |
-| **You supply** | A CSV of measurements, and the judgement about which measurements belong in the same comparison. |
+| Choose one assay endpoint, drop percentage endpoints, derive pActivity, key targets by accession | **You** |
+| Decide which measurements can be compared, and form the pairs | **KFM** |
+| Collapse duplicate measurements by median | **KFM** |
+| Decide whether a censored pair is callable | **KFM** |
+| Randomise which member is A | **KFM** |
+| Cap any one group so it cannot dominate | **KFM** |
+| Enter every comparison twice with the label inverted | **KFM** |
+| Featurise ligands and sequences, fit the forest | **KFM** |
 
-## 1. Supply measurements. KFM pairs them.
+Nothing in that right-hand column assumes a kinase.
 
-One row per measurement is enough:
+## 1. The input file
+
+One row per measurement:
 
 ```
 smiles,gene,pic50,relation
@@ -48,11 +59,11 @@ each pair is A, and caps any one group at `--pairs-per-group` (default 5,000) so
 a deeply screened target cannot become the model. Callability of censored
 readings is decided by the disjoint-interval rule.
 
-**What KFM cannot decide for you.** These are judgements about your data, and
-getting them wrong is silent:
+**Before you hand the file over.** These are properties of your data, not of
+the pairing, and KFM has no way to detect them. Getting them wrong is silent:
 
-- **Match the endpoint within a pair.** Filter to one assay type before you
-  start. Comparing a K<sub>i</sub> against an IC<sub>50</sub> asks the model to
+- **One assay endpoint per file.** KFM cannot see assay type, so it will pair a
+  K<sub>i</sub> with an IC<sub>50</sub> without complaint. That asks the model to
   learn the offset between two assay conventions and report it as potency.
 - **Derive pActivity from value and unit yourself.** Do not trust
   `pchembl_value`. In one GPCR case it was present *only* on erroneous rows.
