@@ -26,8 +26,37 @@ roughly 10,000 comparisons: 0.6797 at 2,000, 0.7165 at 10,000, 0.7462 at 40,000,
 
 # CSV format
 
-Shared by both tools. UTF-8, one comparison per row, header required. Column
-order does not matter. Unknown columns are ignored.
+Shared by both tools. UTF-8, header required. Column order does not matter.
+Unknown columns are ignored.
+
+**Two accepted shapes.** Supply whichever you have; the tools detect which it is.
+
+| Shape | One row is | You need |
+|---|---|---|
+| **Measurements** | one ligand, one target, one value | `smiles`, `gene` or `sequence`, `pic50` |
+| **Comparisons** | both members already paired | the columns in the tables below |
+
+A measurement file is the natural export from a knowledgebase or ChEMBL, and it
+is usually what you have. The same measurement file builds either model: for
+**potency** the tools pair the ligands measured on each target, and for
+**selectivity** they pair the targets each ligand was measured against. Nothing
+else about the file changes.
+
+```
+smiles,gene,pic50,relation
+CC(C)n1nc(...)c2c(N)ncnc12,ABL1,8.0,=
+COc1cc(...)c(Cl)cc1Cl,ABL1,5.0,=
+```
+
+Pairing is reported as it happens: duplicate measurements of the same ligand on
+the same target are collapsed by **median** (never by most potent, which
+reliably selects unit errors), which member is A is **randomised** so the forest
+cannot score by reading column position, and any group offering more than
+`--pairs-per-group` comparisons is sampled down to it (default 5,000) so a single
+deeply screened target cannot become the model. Censored readings are handled by
+the same disjoint-interval rule used for a hand-built file.
+
+If you already hold comparisons, supply them directly and nothing is generated.
 
 **Potency**
 
@@ -98,6 +127,7 @@ Unparseable SMILES are dropped and counted.
 |---|---|---|
 | `examples/extend_potency_example.csv` | 18 | 16 (2 same-direction bounds) |
 | `examples/extend_selectivity_example.csv` | 16 | 16 |
+| `examples/measurements_example.csv` | 60 measurements | builds **either** model: paired by target for potency, by ligand for selectivity |
 
 Both are ChEMBL-derived. Both require `--allow-small`.
 
@@ -217,7 +247,8 @@ relative to the fit.
 | `--max-breadth-loss` | 0.005 | recommendation is the largest count within this |
 | `--name` | `<base>_extended` | name for the merged model |
 | `--label` | none | note recorded in the extension log |
-| `--seed` | 0 | |
+| `--pairs-per-group` | 5000 | measurement input only: most comparisons drawn from any one group |
+| `--seed` | 0 | also seeds pair sampling and A/B randomisation |
 | `--min-samples-leaf` | the base model's | 20 potency, 8 selectivity |
 | `--allow-small` | off | permit fewer than 1,000 usable rows |
 
@@ -290,6 +321,7 @@ released model scores 10 of 10.
 | `--holdout` | none | score your model on this file |
 | `--compare-to` | none | also score a released bundle on the same file |
 | `--min-samples-leaf` | 20 potency, 8 selectivity | |
+| `--pairs-per-group` | 5000 | measurement input only: most comparisons drawn from any one group |
 | `--name`, `--seed`, `--allow-small` | | as for `extend` |
 
 ---

@@ -411,6 +411,51 @@ class TestShippedExamples:
             float(name.rsplit("_", 1)[1])          # parses, or the file is wrong
 
 
+class TestMeasurementInput:
+    """One measurement per row is paired by the tools, not by the user.
+
+    The same file must build either model: potency pairs the ligands measured on
+    each target, selectivity pairs the targets each ligand was measured against.
+    """
+
+    def _rows(self, layout):
+        import kfm.extend as kx
+        repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        src = os.path.join(repo, "examples", "measurements_example.csv")
+        import csv as _csv
+        rows = list(_csv.DictReader(open(src)))
+        kind = "LSL" if layout == "potency" else "SLS"
+        return kx.pair_measurements(rows, kind, cap=5000, seed=0)
+
+    def test_potency_pairs_by_target(self):
+        out = self._rows("potency")
+        assert out, "no comparisons generated"
+        for r in out:
+            assert "smiles_a" in r and "smiles_b" in r and "gene" in r
+            assert r["smiles_a"] != r["smiles_b"]
+
+    def test_selectivity_pairs_by_ligand(self):
+        out = self._rows("selectivity")
+        assert out, "no comparisons generated"
+        for r in out:
+            assert "smiles" in r and "gene_a" in r and "gene_b" in r
+            assert r["gene_a"] != r["gene_b"]
+
+    def test_a_wins_is_not_column_position(self):
+        """If A always held the winner the forest would score by reading the slot."""
+        out = self._rows("potency")
+        a_wins = sum(1 for r in out if float(r["pic50_a"]) > float(r["pic50_b"]))
+        frac = a_wins / len(out)
+        assert 0.3 < frac < 0.7, f"A-wins fraction {frac:.2f} is not balanced"
+
+    def test_paired_files_are_not_reinterpreted(self):
+        """A file that already holds comparisons must be left alone."""
+        import kfm.extend as kx
+        cols = {"smiles_a", "smiles_b", "gene", "pic50_a", "pic50_b"}
+        assert not kx._is_measurement_file(cols, "LSL")
+        assert kx._is_measurement_file({"smiles", "gene", "pic50"}, "LSL")
+
+
 @needs_selectivity
 @pytest.mark.needs_bundle
 class TestShippedSelectivityExample:

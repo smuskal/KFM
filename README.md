@@ -291,11 +291,24 @@ comparisons. Off-target accuracy stays near 0.61 regardless of volume.
 ./kfm.sh buildnew --layout potency --data mine.csv --out ./my_model --trees 300
 ```
 
-**CSV format.** Potency: `smiles_a`, `smiles_b`, and one `gene` or `sequence`.
-Selectivity: one `smiles` with `gene_a`/`sequence_a` and `gene_b`/`sequence_b`.
-Outcome is `pic50_a`/`pic50_b` with optional `relation_a`/`relation_b`, or a
-`winner` column of `A`/`B`. Raw sequences are embedded with the bundled ESM2
-recipe.
+**CSV format — supply measurements or comparisons.** Both tools accept either.
+
+*Measurements*, one ligand and one target per row, which is the usual export
+from a knowledgebase or ChEMBL: `smiles`, `gene` or `sequence`, `pic50`, with an
+optional `relation`. The **same file builds either model** — for potency the
+tools pair the ligands measured on each target, for selectivity they pair the
+targets each ligand was measured against. Duplicates are collapsed by median,
+which member is A is randomised, and `--pairs-per-group` (default 5,000) stops
+one deeply screened target dominating.
+
+*Comparisons*, already paired, if that is what you hold. Potency: `smiles_a`,
+`smiles_b`, and one `gene` or `sequence`. Selectivity: one `smiles` with
+`gene_a`/`sequence_a` and `gene_b`/`sequence_b`. Outcome either way is
+`pic50_a`/`pic50_b` with optional `relation_a`/`relation_b`, or a `winner`
+column of `A`/`B`. Raw sequences are embedded with the bundled ESM2 recipe.
+
+Either way, every usable comparison is entered **twice**, once in each order
+with the label inverted. Do not supply both orders yourself.
 
 **Qualifiers invert on conversion.** Our `relation` describes the potency: `>`
 means at least this potent. ChEMBL and most assay exports put the qualifier on

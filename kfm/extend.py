@@ -210,11 +210,124 @@ def _decide(pa, ka, pb, kb):
     return False, False, False             # two bounds the same way
 
 
-def read_csv(path, b, have_emb):
+MEASURE_CAP_DEFAULT = 5000
+
+
+def _is_measurement_file(cols, kind):
+    """One measurement per row: a ligand, a target, a value. The natural shape of
+    a knowledgebase or ChEMBL extract, and what users actually have.
+
+    Detected only when the paired columns are ABSENT, so an existing paired file
+    is never reinterpreted.
+    """
+    if "smiles" not in cols or not ({"pic50", "pvalue", "pactivity"} & cols):
+        return False
+    if not ({"gene", "sequence"} & cols):
+        return False
+    paired = ({"smiles_a", "smiles_b"} & cols) or ({"gene_a", "gene_b",
+                                                    "sequence_a", "sequence_b"} & cols)
+    return not paired
+
+
+def pair_measurements(rows, kind, cap=MEASURE_CAP_DEFAULT, seed=0, log=lambda s: None):
+    """Turn one-measurement-per-row into the paired rows the models are fitted on.
+
+    Potency  (LSL): group by TARGET, pair the ligands measured on it.
+    Selectivity (SLS): group by LIGAND, pair the targets it was measured against.
+
+    Same input file either way; only the grouping differs. Callability is NOT
+    decided here -- the pairs are emitted with both values and both relations and
+    the existing _decide() rule applies downstream, so censored readings behave
+    exactly as they do for a hand-built file.
+    """
+    import itertools
+    import random
+    import statistics
+
+    val_key = None
+    for k in ("pic50", "pvalue", "pactivity"):
+        if any(k in {c.lower().strip() for c in r} for r in rows[:1]):
+            val_key = k
+            break
+    tgt_key = "gene" if any("gene" in {c.lower().strip() for c in r} for r in rows[:1]) else "sequence"
+
+    # Collapse duplicates by MEDIAN, never by most potent: taking the best value
+    # reliably selects unit errors rather than real potency.
+    cell, rel = {}, {}
+    bad = 0
+    for r in rows:
+        g = {k.lower().strip(): (v or "").strip() for k, v in r.items()}
+        smi, tgt, raw = g.get("smiles"), g.get(tgt_key), g.get(val_key)
+        if not (smi and tgt and raw):
+            bad += 1
+            continue
+        try:
+            v = float(raw)
+        except ValueError:
+            bad += 1
+            continue
+        cell.setdefault((tgt, smi), []).append(v)
+        rel[(tgt, smi)] = g.get("relation", "=") or "="
+    if bad:
+        log(f"  dropped, incomplete or unparsable        {bad:,}")
+    flat = {k: statistics.median(v) for k, v in cell.items()}
+    dupes = sum(len(v) - 1 for v in cell.values())
+    if dupes:
+        log(f"  duplicate measurements merged by median  {dupes:,}")
+
+    groups = {}
+    for (tgt, smi), v in flat.items():
+        key = tgt if kind == "LSL" else smi          # target for potency, ligand for selectivity
+        groups.setdefault(key, []).append((smi, tgt, v))
+
+    rng = random.Random(seed)
+    out, capped = [], 0
+    for key, members in groups.items():
+        if len(members) < 2:
+            continue
+        pairs = list(itertools.combinations(range(len(members)), 2))
+        if len(pairs) > cap:                          # one deep target must not become the model
+            capped += 1
+            rng.shuffle(pairs)
+            pairs = pairs[:cap]
+        for i, j in pairs:
+            if rng.random() < 0.5:                    # randomise which member is A, or the
+                i, j = j, i                           # forest learns to read column position
+            (sa, ta, va), (sb, tb, vb) = members[i], members[j]
+            # str(): the paired path downstream reads every cell as text, exactly
+            # as csv.DictReader hands it over for a hand-built file.
+            row = {"pic50_a": str(va), "pic50_b": str(vb),
+                   "relation_a": rel[(ta, sa)], "relation_b": rel[(tb, sb)]}
+            if kind == "LSL":
+                row.update({"smiles_a": sa, "smiles_b": sb, tgt_key: key})
+            else:
+                row.update({"smiles": key,
+                            tgt_key + "_a": ta, tgt_key + "_b": tb})
+            out.append(row)
+
+    log(f"  groups with 2+ members                   {sum(1 for m in groups.values() if len(m)>1):,}")
+    if capped:
+        log(f"  groups capped at {cap:,} pairs{'':<12} {capped:,}")
+    log(f"  comparisons generated                    {len(out):,}")
+    return out
+
+
+def read_csv(path, b, have_emb, measure_cap=MEASURE_CAP_DEFAULT, measure_seed=0):
     rows = list(csv.DictReader(open(path, newline="", encoding="utf-8-sig")))
     if not rows:
         raise SystemExit(f"{path} has no rows")
     cols = {c.lower().strip() for c in rows[0]}
+    if _is_measurement_file(cols, b.kind):
+        log(f"\n{path} is one measurement per row. Pairing them "
+            f"{'by target' if b.kind == 'LSL' else 'by ligand'}:")
+        rows = pair_measurements(rows, b.kind, cap=measure_cap,
+                                 seed=measure_seed, log=log)
+        if not rows:
+            raise SystemExit(
+                f"{path} produced no comparisons. Every target needs at least two "
+                "measured ligands (potency), or every ligand at least two measured "
+                "targets (selectivity).")
+        cols = {c.lower().strip() for c in rows[0]}
     if b.kind == "LSL":
         for c in ("smiles_a", "smiles_b"):
             if c not in cols:
@@ -376,6 +489,11 @@ def main(argv=None):
                     help="which installed model to extend; shorthand for --base")
     ap.add_argument("--trees", type=int, default=20)
     ap.add_argument("--holdout", default=None)
+    ap.add_argument("--pairs-per-group", type=int, default=MEASURE_CAP_DEFAULT,
+                    metavar="N",
+                    help="only when --data is one measurement per row: the most\n"
+                         "comparisons to draw from any single group, so one deep\n"
+                         "target cannot become the model. Default %(default)s.")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--min-samples-leaf", type=int, default=None,
                     help="defaults to the base model's own value")
@@ -431,7 +549,7 @@ def main(argv=None):
     except ImportError:
         have_emb = False
 
-    usable, smis, tgts, drop, emb = read_csv(a.data, b, have_emb)
+    usable, smis, tgts, drop, emb = read_csv(a.data, b, have_emb, a.pairs_per_group, a.seed)
     total = len(usable) + sum(drop.values())
     log(f"\nyour data   : {a.data}")
     log(f"  rows read                 {total:,}")
@@ -496,14 +614,14 @@ def main(argv=None):
         log("SWEEP: accuracy against tree count, measured on your own holdout")
         log("One fit; the curve is prefixes of the same trees, which is exact.")
         log("=" * 74)
-        h, hs, ht, _hd, hemb = read_csv(a.holdout, b, have_emb)
+        h, hs, ht, _hd, hemb = read_csv(a.holdout, b, have_emb, a.pairs_per_group, a.seed)
         hemb = hemb or emb
         Xh, yh, nh = design([r for r in h if not r[5]], hs, ht, b, hemb)
         base_acc, curve = sweep_curve(b.model, yours, b.c1, Xh, yh, nh, points)
         del Xh
         bcurve, base_b = None, None
         if a.holdout_breadth:
-            hb, hbs, hbt, _x, hbe = read_csv(a.holdout_breadth, b, have_emb)
+            hb, hbs, hbt, _x, hbe = read_csv(a.holdout_breadth, b, have_emb, a.pairs_per_group, a.seed)
             hbe = hbe or emb
             Xb, yb, nbn = design([r for r in hb if not r[5]], hbs, hbt, b, hbe)
             base_b, bcurve = sweep_curve(b.model, yours, b.c1, Xb, yb, nbn, points)
@@ -615,7 +733,7 @@ def main(argv=None):
 
     if a.holdout:
         log(f"\nholdout: {a.holdout}")
-        h, hs, ht, hd, hemb = read_csv(a.holdout, b, have_emb)
+        h, hs, ht, hd, hemb = read_csv(a.holdout, b, have_emb, a.pairs_per_group, a.seed)
         hemb = hemb or emb
         before, n = score(b.model, b.c1, h, hs, ht, b, hemb)
         c1m = int(np.where(merged.classes_ == 1)[0][0])

@@ -94,6 +94,10 @@ def main(argv=None):
                          "from. Its weights are never loaded.")
     ap.add_argument("--trees", type=int, default=300)
     ap.add_argument("--min-samples-leaf", type=int, default=None)
+    ap.add_argument("--pairs-per-group", type=int, default=kx.MEASURE_CAP_DEFAULT,
+                    metavar="N",
+                    help="only when --data is one measurement per row: the most\n"
+                         "comparisons to draw from any single group. Default %(default)s.")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--holdout", default=None)
     ap.add_argument("--compare-to", default=None,
@@ -133,7 +137,7 @@ def main(argv=None):
     except ImportError:
         have_emb = False
 
-    usable, smis, tgts, drop, emb = kx.read_csv(a.data, b, have_emb)
+    usable, smis, tgts, drop, emb = kx.read_csv(a.data, b, have_emb, a.pairs_per_group, a.seed)
     total = len(usable) + sum(drop.values())
     kx.log(f"\nyour data   : {a.data}")
     kx.log(f"  rows read                 {total:,}")
@@ -168,10 +172,28 @@ def main(argv=None):
     del X, y
 
     os.makedirs(a.out, exist_ok=True)
+    # The gene/vector lookup tables belong to the RECIPE's family. Copying them
+    # into a model fitted on another family ships a kinase gene index beside
+    # non-kinase weights: gene lookups then fail, and any name that happens to
+    # resolve is scored against the wrong protein. Copy them only when the recipe
+    # actually covers the targets this model was fitted on.
+    LOOKUPS = {"kinase_vectors.npz", "kinase_index.json", "gene_map.json",
+               "sequence_vectors.npz", "sequence_index.json",
+               "targets.csv", "targets.json"}
+    named = [t for t in tgts if t[0] == "gene"]
+    covered = all(t[1] in b.gene_to_seq_key for t in named) if named else False
     for f in SUPPORT:
+        if f in LOOKUPS and not covered:
+            continue
         src = os.path.join(recipe, f)
         if os.path.exists(src):
             shutil.copy2(src, os.path.join(a.out, f))
+    if not covered:
+        kx.log("\nThis model was not fitted on the recipe's own targets, so the "
+               "recipe's\ngene and vector lookup tables were NOT copied into "
+               f"{a.out}.\nScore it with the same sequence= columns you trained "
+               "with; gene names\nresolve only through a lookup table for the "
+               "family that built it.")
     shutil.copy2(os.path.abspath(__file__), os.path.join(a.out, "kfm_buildnew.py"))
     shutil.copy2(kx.__file__, os.path.join(a.out, "kfm_extend.py"))
     name = a.name or f"my_{a.layout}_model"
@@ -223,7 +245,7 @@ def main(argv=None):
 
     if a.holdout:
         kx.log(f"\nholdout: {a.holdout}")
-        h, hs, ht, hd, hemb = kx.read_csv(a.holdout, b, have_emb)
+        h, hs, ht, hd, hemb = kx.read_csv(a.holdout, b, have_emb, a.pairs_per_group, a.seed)
         hemb = hemb or emb
         c1 = int(np.where(rf.classes_ == 1)[0][0])
         mine, n = kx.score(rf, c1, h, hs, ht, b, hemb)
