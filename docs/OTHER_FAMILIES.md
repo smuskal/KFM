@@ -131,47 +131,36 @@ model consumes:
 | Familiar | 0.70 – 1.00 |
 | Fingerprint identity | = 1.00 |
 
-Expect a steep gradient. In the GPCR build, potency accuracy ran from 0.681 at
-fingerprint identity down to 0.441 — below chance — where both ligands were
-novel. A pooled figure hides that completely.
+Expect a steep gradient. In the GPCR port, potency accuracy at fingerprint
+identity was far above the pooled figure, and fell below chance where both
+ligands were novel. A pooled figure hides that completely. (Figures pending
+re-measurement and not quoted here.)
 
 Splitting on exact structure does **not** remove the identity tier: stereoisomers,
 salts and tautomers with different InChIKeys collapse onto the same fingerprint.
-In the GPCR build, 3,979 of 43,508 held-out ligands still sat at Tanimoto 1.0
-despite a compound-disjoint split.
+In the GPCR port, a meaningful share of held-out ligands still sat at Tanimoto
+1.0 despite a compound-disjoint split.
 
 **Run the sequence ablation, and be careful which one you run.** There are two
-variants and they answer different questions. Do not compare their numbers.
+variants and they answer different questions.
 
-*Refit ablation.* Retrain the model with the sequence block zeroed, and again
-with the sequence vectors **permuted** — each target consistently given another
-target's embedding, so identity survives as a lookup key while its
-correspondence to biology is destroyed. If a refit on permuted vectors scores as
-well as the original, the model never needed the biology: it relearns the
-permuted vector as an arbitrary per-target index. This is the diagnostic
-Mattsson and Walters describe, and it is the one to run.
+*Refit ablation — the one to run.* Retrain the model with the sequence block
+zeroed, and again with the sequence vectors **permuted**: each target
+consistently given another target's embedding, so target identity survives as a
+lookup key while its correspondence to biology is destroyed. If the refit on
+permuted vectors scores as well as the original, the model never needed the
+biology — it simply relearns the permuted vector as an arbitrary per-target
+index. That is the proteochemometric failure mode Mattsson and Walters describe.
 
-In the GPCR build, refitted on a temporal split:
-
-| | full | zeroed | permuted |
-|---|---|---|---|
-| potency | 0.607 | 0.553 (−0.054) | 0.601 (−0.007) |
-| selectivity | 0.663 | 0.491 (−0.172) | 0.659 (−0.004) |
-
-Zeroing costs real accuracy, so knowing *which* receptor matters. Permuting costs
-almost nothing, so the embedding is acting as a per-target index rather than as
-transferable biology — the proteochemometric failure mode.
-
-*Re-score ablation.* Feeding permuted vectors to an **already-trained** model at
-prediction time is a different measurement. It cannot come out neutral: the model
+*Re-score ablation — a different question.* Feeding permuted vectors to an
+**already-trained** model at prediction time cannot come out neutral: the model
 was fitted against one mapping and is being handed another, so a large drop is
-expected whatever the embedding means. On the released kinase potency model,
-re-scoring 3,720 held-out ChEMBL comparisons gave 0.7188 full, 0.6140 zeroed and
-0.6033 permuted. That says the model relies on the specific mapping it learned.
-It does **not** answer the question the refit answers, and it neither confirms
-nor contradicts the GPCR result.
+expected whatever the embedding means. It tells you the model depends on the
+mapping it learned. It does not tell you whether that mapping carries biology.
 
-If you only have time for one, do the refit.
+Interpret only the refit, and report which variant you ran. Published figures
+for either family are pending re-measurement and are deliberately not quoted
+here.
 
 ## 5. Checklist
 
