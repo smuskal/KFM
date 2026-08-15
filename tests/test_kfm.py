@@ -133,6 +133,39 @@ class TestBands:
         assert band_accuracy("potency", 0.699) == "74.6%"
 
 
+class TestBandsBelongToTheModelThatEarnedThem:
+    """A band is a measurement of one model. It must not be lent to another.
+
+    The table in cli.py is keyed by the COMMAND, which is right only while the
+    bundle behind that command is the released one. Pointed at a model built by
+    `kfm buildnew` or grown by `kfm extend`, the CLI used to quote the released
+    model's accuracy for a model nobody has ever evaluated, contradicting that
+    bundle's own manifest.
+    """
+
+    def test_a_released_bundle_is_unchanged(self):
+        """No manifest, or one without bands, keeps the published table."""
+        assert band_accuracy("potency", 0.85, None) == "85.0%"
+        assert band_accuracy("potency", 0.85, {"name": "released"}) == "85.0%"
+        assert band_accuracy("selectivity", 0.85, None) == "96.4%"
+
+    def test_a_model_you_built_reports_no_accuracy(self):
+        assert band_accuracy("potency", 0.85, {"built_by": "kfm_buildnew"}) is None
+
+    def test_an_extended_model_reports_no_accuracy(self):
+        assert band_accuracy("potency", 0.95,
+                             {"EXTENDED_MODEL_WARNING": "figures withdrawn"}) is None
+        assert band_accuracy("potency", 0.95,
+                             {"extensions": [{"trees_added": 5}]}) is None
+
+    def test_a_bundle_carrying_its_own_bands_uses_them(self):
+        """How version 3 will ship its numbers: in the manifest, not in code."""
+        m = {"confidence_bands": [[0.90, "91.1%"], [0.70, "80.0%"], [0.00, "55.0%"]]}
+        assert band_accuracy("potency", 0.95, m) == "91.1%"
+        assert band_accuracy("potency", 0.75, m) == "80.0%"
+        assert band_accuracy("potency", 0.10, m) == "55.0%"
+
+
 # ---------------------------------------------------------------------------
 # Table formatting - no bundle needed
 # ---------------------------------------------------------------------------

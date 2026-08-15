@@ -32,11 +32,49 @@ BANDS = {
 }
 
 
-def band_accuracy(model: str, conf: float) -> str:
-    for lo, acc in BANDS[model]:
+def band_accuracy(model: str, conf: float, manifest: dict | None = None) -> str | None:
+    """Measured accuracy for this confidence, or None when none was measured.
+
+    The table above belongs to the two RELEASED models. It is keyed by which
+    command you ran, which is right only while the bundle behind that command is
+    the released one. Point the CLI at a model you built with `kfm buildnew`, or
+    one you grew with `kfm extend`, and the old code quoted the released model's
+    accuracy for a model that has never been evaluated. The bundle's own
+    manifest said the opposite in the same breath: "Nothing about the released
+    models' accuracy applies to it."
+
+    So the manifest decides now:
+      its own `confidence_bands`  ->  use them
+      built by buildnew, or extended  ->  None, because nothing was measured
+      neither, i.e. a released bundle  ->  the table above, as before
+    """
+    bands = None
+    if manifest:
+        own = manifest.get("confidence_bands")
+        if own:
+            bands = [(float(lo), str(acc)) for lo, acc in own]
+        elif manifest.get("built_by") == "kfm_buildnew" or \
+                "EXTENDED_MODEL_WARNING" in manifest or manifest.get("extensions"):
+            return None
+    if bands is None:
+        bands = BANDS[model]
+    for lo, acc in bands:
         if conf >= lo:
             return acc
-    return BANDS[model][-1][1]
+    return bands[-1][1]
+
+
+def _manifest_for(model: str) -> dict | None:
+    """The loaded bundle's manifest, or None if it cannot be read.
+
+    Never fatal: a missing or unreadable manifest must not stop a prediction
+    that has already been computed.
+    """
+    try:
+        return json.load(open(os.path.join(bundles.bundle_dir(model),
+                                           "MANIFEST.json")))
+    except Exception:                                        # noqa: BLE001
+        return None
 
 
 def _emit(args, payload, text: str) -> None:
@@ -73,6 +111,7 @@ def cmd_potency(args) -> int:
     else:
         kw["gene"] = target
 
+    man = _manifest_for("potency")
     smis = [l["smiles"] for l in ligands]
     # rank() scores every unordered pair in BOTH ligand orders and averages
     # them. That averaging is the model's own and is not optional: the two
@@ -91,7 +130,7 @@ def cmd_potency(args) -> int:
         rows.append([i + 1, name, smi, f"{score:.3f}", f"{strength:.2f}"])
         payload.append({"rank": i + 1, "name": name, "smiles": smi,
                         "score": float(score), "confidence": float(strength),
-                        "band_accuracy": band_accuracy("potency", strength)})
+                        "band_accuracy": band_accuracy("potency", strength, man)})
 
     text = (f"Potency ranking against {target}\n\n"
             + kio.fmt_table(
@@ -166,7 +205,7 @@ def cmd_selectivity(args) -> int:
         payload.append({"name": lig.get("name"), "smiles": lig["smiles"],
                         "scores": scores, "prefers": top,
                         "confidence": scores[top],
-                        "band_accuracy": band_accuracy("selectivity", scores[top]),
+                        "band_accuracy": band_accuracy("selectivity", scores[top], _manifest_for("selectivity")),
                         "pairs": {f"{a}|{b}": p[(li, a, b)] for a, b in pairs}})
 
     # Most decisive compound first, matching the web page and the emailed report.
