@@ -2,7 +2,7 @@
 
 Two tiers, and the split matters:
 
-  * Tests that need NO model bundle — argument parsing, file reading, the
+  * Tests that need NO model bundle - argument parsing, file reading, the
     confidence bands, the download licence gate. These always run.
 
   * Tests that DO need a bundle, marked `needs_bundle`. They are skipped with a
@@ -45,7 +45,7 @@ needs_selectivity = pytest.mark.skipif(
 
 
 # ---------------------------------------------------------------------------
-# Input parsing — no bundle needed
+# Input parsing - no bundle needed
 # ---------------------------------------------------------------------------
 class TestReadSmiles:
     def test_bare_smiles_has_no_name(self):
@@ -110,7 +110,7 @@ class TestReadSequence:
 
 
 # ---------------------------------------------------------------------------
-# Confidence bands — no bundle needed
+# Confidence bands - no bundle needed
 # ---------------------------------------------------------------------------
 class TestBands:
     def test_potency_bands(self):
@@ -134,7 +134,7 @@ class TestBands:
 
 
 # ---------------------------------------------------------------------------
-# Table formatting — no bundle needed
+# Table formatting - no bundle needed
 # ---------------------------------------------------------------------------
 class TestTable:
     def test_nothing_is_truncated(self):
@@ -150,7 +150,7 @@ class TestTable:
 
 
 # ---------------------------------------------------------------------------
-# Bundle resolution and the licence gate — no bundle needed
+# Bundle resolution and the licence gate - no bundle needed
 # ---------------------------------------------------------------------------
 class TestBundles:
     def test_env_override_wins(self, monkeypatch, tmp_path):
@@ -207,7 +207,7 @@ class TestBundles:
 
 
 # ---------------------------------------------------------------------------
-# The published numbers — these need the weights
+# The published numbers - these need the weights
 # ---------------------------------------------------------------------------
 def run_cli(*args):
     """Invoke the CLI the way a user does, and return parsed JSON."""
@@ -224,7 +224,7 @@ class TestPotencyNumbers:
     def test_worked_example_from_the_report(self):
         """ABL1, bosutinib vs the PP1-type compound.
 
-        The report prints 0.846 and 0.151 — its SINGLE-ORDER figures, which sum
+        The report prints 0.846 and 0.151 - its SINGLE-ORDER figures, which sum
         to 0.997. rank() averages both ligand orders, and (0.846 + (1-0.151))/2
         = 0.8475. So 0.847 IS the report's number correctly aggregated. If this
         ever reads 0.846, the averaging has been lost.
@@ -370,7 +370,7 @@ class TestEnvironmentFilesAgree:
         """A `-r requirements.txt` DIRECTIVE breaks `conda env create`.
 
         Conda copies the pip block to a temp file, so the relative path resolves
-        against /tmp. Comments mentioning it are fine — only real directives are
+        against /tmp. Comments mentioning it are fine - only real directives are
         checked, which is why this looks at stripped, non-comment lines rather
         than searching the whole file.
         """
@@ -454,6 +454,141 @@ class TestMeasurementInput:
         cols = {"smiles_a", "smiles_b", "gene", "pic50_a", "pic50_b"}
         assert not kx._is_measurement_file(cols, "LSL")
         assert kx._is_measurement_file({"smiles", "gene", "pic50"}, "LSL")
+
+
+def run_tool(*args, timeout=1800):
+    """Invoke `extend` or `buildnew` the way a user does.
+
+    Not run_cli: those two own their own flags and are dispatched before the
+    main parser, so they take no --json and print a human log. Returns the
+    combined output so a test can assert on what the tool told the user.
+    """
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    out = subprocess.run([sys.executable, "-m", "kfm", *args],
+                         capture_output=True, text=True, cwd=repo, timeout=timeout)
+    assert out.returncode == 0, (out.stdout + out.stderr)[-3000:]
+    return out.stdout + out.stderr
+
+
+def _example(name):
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(repo, "examples", name)
+
+
+@needs_potency
+@pytest.mark.needs_bundle
+class TestBuildNewEndToEnd:
+    """`kfm buildnew` fits on the user's data alone and writes a usable bundle.
+
+    The pairing tests above check the arithmetic in isolation. These run the
+    tool, which is the only way to catch a break between pairing, featurising,
+    fitting and writing -- the seam where the Aug 2026 measurement-input change
+    landed. Everything is written under tmp_path, so nothing touches ./kfm-models.
+    """
+
+    def test_fits_a_potency_model_from_one_measurement_per_row(self, tmp_path):
+        out = tmp_path / "my_potency"
+        log = run_tool("buildnew", "--layout", "potency",
+                       "--data", _example("measurements_example.csv"),
+                       "--out", str(out), "--trees", "8", "--allow-small")
+        man = json.load(open(out / "MANIFEST.json"))
+        assert man["layout"] == "potency"
+        assert any(f.endswith(".joblib") for f in os.listdir(out)), \
+            f"no model written; tool said:\n{log[-1500:]}"
+
+    @needs_selectivity
+    def test_the_same_file_builds_the_selectivity_layout(self, tmp_path):
+        """The point of one-measurement-per-row: one file, either model.
+
+        Potency pairs the ligands measured on each target; selectivity pairs the
+        targets each ligand was measured against. If this ever needs a different
+        input file from the test above, that property has been lost.
+
+        Guarded on the selectivity bundle as well as potency: with no --recipe,
+        buildnew reads the recipe from the bundle matching --layout, so this
+        needs the selectivity bundle installed even though it loads no weights.
+        """
+        out = tmp_path / "my_selectivity"
+        run_tool("buildnew", "--layout", "selectivity",
+                 "--data", _example("measurements_example.csv"),
+                 "--out", str(out), "--trees", "8", "--allow-small")
+        assert json.load(open(out / "MANIFEST.json"))["layout"] == "selectivity"
+
+    def test_no_kfm_weights_are_claimed(self, tmp_path):
+        """buildnew reads a bundle for the feature recipe and nothing else.
+
+        `derived_from` is extend's record of a merge. Its presence here would
+        mean released weights had reached a model advertised as free of them,
+        which is a licensing claim as much as a technical one.
+        """
+        out = tmp_path / "clean"
+        run_tool("buildnew", "--layout", "potency",
+                 "--data", _example("measurements_example.csv"),
+                 "--out", str(out), "--trees", "8", "--allow-small")
+        assert "derived_from" not in json.load(open(out / "MANIFEST.json"))
+
+
+@needs_potency
+@pytest.mark.needs_bundle
+class TestExtendEndToEnd:
+    """`kfm extend` merges trees fitted on the user's data into a released model.
+
+    Deliberately no assertion that the extended model still returns 0.847: it
+    must not. Added trees change every prediction, which is exactly why the tool
+    withdraws the released figures. Asserting the published number here would
+    encode the opposite of what the tool guarantees.
+    """
+
+    @staticmethod
+    def _extension(out):
+        return json.load(open(os.path.join(out, "MANIFEST.json")))["extensions"][-1]
+
+    def test_merges_and_records_what_it_did(self, tmp_path):
+        out = tmp_path / "extended"
+        run_tool("extend", "--model", "potency",
+                 "--data", _example("extend_potency_example.csv"),
+                 "--out", str(out), "--trees", "5", "--allow-small",
+                 "--label", "test suite")
+        rec = self._extension(out)
+        assert rec["trees_added"] == 5
+        assert rec["label"] == "test suite"
+        assert rec["model_kind"] == "LSL"
+        assert rec["usable_comparisons"] == 16, \
+            "the shipped example is documented as 18 rows, 16 usable"
+
+    def test_the_forest_actually_grew_by_the_trees_added(self, tmp_path):
+        """A merge that silently added nothing would still write a manifest."""
+        out = tmp_path / "extended"
+        run_tool("extend", "--model", "potency",
+                 "--data", _example("extend_potency_example.csv"),
+                 "--out", str(out), "--trees", "5", "--allow-small")
+        import joblib
+        man = json.load(open(out / "MANIFEST.json"))
+        merged = joblib.load(out / man["model_file"])
+        assert merged.n_estimators == self._extension(out)["n_estimators_after"]
+        assert len(merged.estimators_) == merged.n_estimators
+
+    def test_released_figures_are_withdrawn(self, tmp_path):
+        """The extended model is not the model the reports describe."""
+        out = tmp_path / "extended"
+        run_tool("extend", "--model", "potency",
+                 "--data", _example("extend_potency_example.csv"),
+                 "--out", str(out), "--trees", "5", "--allow-small")
+        man = json.load(open(out / "MANIFEST.json"))
+        assert "EXTENDED_MODEL_WARNING" in man
+        assert man["derived_from"]["model_sha256"] != man["model_sha256"]
+        assert not os.path.exists(out / "reference_predictions.json"), \
+            "released reference predictions must not survive a merge"
+
+    def test_the_model_filename_is_kept_so_predict_py_still_loads_it(self, tmp_path):
+        out = tmp_path / "extended"
+        run_tool("extend", "--model", "potency",
+                 "--data", _example("extend_potency_example.csv"),
+                 "--out", str(out), "--trees", "5", "--allow-small")
+        base = bundles.bundle_dir("potency")
+        base_file = json.load(open(os.path.join(base, "MANIFEST.json")))["model_file"]
+        assert json.load(open(out / "MANIFEST.json"))["model_file"] == base_file
+        assert os.path.exists(out / base_file)
 
 
 @needs_selectivity
