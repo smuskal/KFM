@@ -1,9 +1,9 @@
-# Kinase Foundation Model — command line tools
+# Kinase Foundation Model - command line tools
 
 Run the Kinase Foundation Models locally, on your own machine, against your own
 compounds. Nothing is sent anywhere: the models run in your process.
 
-**Project home: <https://kinasefoundationmodel.com>** — the same models in the
+**Project home: <https://kinasefoundationmodel.com>** - the same models in the
 browser with no install, the research reports behind every number here, and each
 model's own limitations page:
 [version 2 overview](https://kinasefoundationmodel.com/v2/) ·
@@ -25,23 +25,23 @@ Most current first; version 1 is kept below for continuity.
 **Version 1 and version 2 are separate models with separate downloads.**
 Installing one does not install the other. Each section below is self-contained:
 install, hardware, and how to run, start to finish. **Most people want version
-2** — it is the current release, and its section is open by default.
+2** - it is the current release, and its section is open by default.
 
 [![Not working on kinases? Nothing in the method is kinase-specific. The same two commands build potency and selectivity models for any protein family, from one measurement per row.](docs/other-families-banner.png)](docs/OTHER_FAMILIES.md)
 
 > [!TIP]
 > The featuriser, the pairwise formulation, the label-reversal swap, the
 > censored-value logic and the forest work on any protein family for which you
-> have sequences and activity data. Give `kfm buildnew` one measurement per row —
-> `smiles`, `sequence`, `pic50` — and it builds the comparisons for you, for
+> have sequences and activity data. Give `kfm buildnew` one measurement per row -
+> `smiles`, `sequence`, `pic50` - and it builds the comparisons for you, for
 > either model, from the same file.
 >
-> **→ [`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md)** — written from an
+> **→ [`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md)** - written from an
 > end-to-end port of both layouts to GPCRs, 1.09M ChEMBL rows over 405 receptors.
 
 ---
 
-## Licensing — the code and the weights differ
+## Licensing - the code and the weights differ
 
 | What | Licence |
 |---|---|
@@ -61,7 +61,7 @@ Two limits apply to everyone, including academic and non-profit users:
   agreement.
 - **No reverse engineering.** You may not decompile or reverse engineer the
   weights, nor attempt to extract, reconstruct, infer or approximate the
-  Knowledgebase or any portion of it from the weights or their outputs —
+  Knowledgebase or any portion of it from the weights or their outputs -
   including by systematic or bulk querying.
 
 See `LICENSING.md` for why the split exists, and `LICENSE-MODELS.txt` for the
@@ -70,7 +70,7 @@ full terms.
 ---
 
 <details open>
-<summary><b>▶︎ VERSION 2 — the current release (click to collapse)</b></summary>
+<summary><b>▶︎ VERSION 2 - the current release (click to collapse)</b></summary>
 
 <br>
 
@@ -80,21 +80,21 @@ compound is active.** Read the ordering; use the confidence to decide which part
 of it to act on.
 
 In both diagrams the encoder boxes are coloured by **role**: the two paired
-inputs being compared are neutral, and the single shared input — the sequence for
-potency, the ligand for selectivity — is blue.
+inputs being compared are neutral, and the single shared input - the sequence for
+potency, the ligand for selectivity - is blue.
 
 ![Potency model. Ligand A, one kinase sequence and ligand B enter a single random forest in that fixed order. Each ligand goes through a 1,024-bit Morgan count fingerprint plus 14 descriptors covering size, topology and composition; the sequence goes through ESM2, mean-pooled to 480 numbers. The forest returns the probability that ligand A is the more potent of the two, shown on a bar running from A binds tighter to B binds tighter with confidence marked at its centre. The worked case is bosutinib, measured pIC50 8.96, against a pyrazolo[3,4-d]pyrimidine at 4.50, on the ABL1 kinase domain, RCSB 3UE4.](docs/arch-potency-20260812.png)
 
-*Potency — ligand A, the sequence, ligand B, as one row. Every pair is scored in
+*Potency - ligand A, the sequence, ligand B, as one row. Every pair is scored in
 both ligand orders and averaged.*
 
 ![Selectivity model. Sequence A, one ligand and sequence B enter a single random forest in that fixed order. Each sequence goes through ESM2, mean-pooled to 480 numbers; the ligand goes through a 1,024-bit Morgan count fingerprint plus 14 descriptors covering size, topology and composition. The forest returns two probabilities that sum to 1, shown on a bar running from protein A has greater affinity to the ligand to protein B has greater affinity. The worked case is dasatinib between ABL1, UniProt P00519, 1,130 residues, and GSK3B, UniProt P49841, 420 residues.](docs/arch-selectivity-20260812.png)
 
-*Selectivity — sequence A, the ligand, sequence B. The position is the question.*
+*Selectivity - sequence A, the ligand, sequence B. The position is the question.*
 
 ---
 
-### 1️⃣ Install — one command, source and both models
+### 1️⃣ Install - one command, source and both models
 
 ```bash
 git clone https://github.com/smuskal/KFM.git
@@ -104,7 +104,7 @@ cd KFM
 
 That is the whole install. It builds a private environment in `./env`, downloads
 **both** version 2 models into `./kfm-models`, and then proves it works by
-scoring the published worked example — if bosutinib does not come back at 0.847
+scoring the published worked example - if bosutinib does not come back at 0.847
 against ABL1 it fails rather than reporting success.
 
 Everything stays inside the `KFM` folder. No global environment is created or
@@ -119,7 +119,7 @@ Python's own `venv` when it cannot.
 | `./install.sh all` | version 2 and the legacy version 1 |
 
 **Requirements.** Python 3.10–3.12, Intel or Apple Silicon, Linux, macOS or
-Windows. **RAM is the real constraint** — these forests expand about sevenfold
+Windows. **RAM is the real constraint** - these forests expand about sevenfold
 when loaded:
 
 | Model | Download | RAM to run |
@@ -127,7 +127,7 @@ when loaded:
 | potency | 0.76 GB | **5 GB** |
 | selectivity | 2.84 GB | **22 GB** |
 
-A 16 GB laptop runs potency comfortably but **cannot load selectivity** — it will
+A 16 GB laptop runs potency comfortably but **cannot load selectivity** - it will
 swap and then be killed by the operating system. Both download either way; the
 installer warns before fetching something this machine cannot run.
 
@@ -136,11 +136,11 @@ installer warns before fetching something this machine cannot run.
 
 <br>
 
-**macOS** — run `xcode-select --install` and accept the dialog, or download from
+**macOS** - run `xcode-select --install` and accept the dialog, or download from
 <https://git-scm.com/download/mac>.
-**Windows** — installer at <https://git-scm.com/download/win>; afterwards use
+**Windows** - installer at <https://git-scm.com/download/win>; afterwards use
 **Git Bash**, not Command Prompt.
-**Linux** — `sudo apt install git` or `sudo dnf install git`.
+**Linux** - `sudo apt install git` or `sudo dnf install git`.
 
 **Or skip git entirely:** at <https://github.com/smuskal/KFM> click the green
 **Code** button, choose **Download ZIP**, unzip, and `cd` into the folder.
@@ -162,10 +162,10 @@ Try `python3` first. If neither exists, install Python 3.12 from
 ### 2️⃣ Run it
 
 **Always use `./kfm.sh`.** It runs the environment the installer built. Typing
-plain `python -m kfm` uses whatever Python your shell happens to have — usually a
+plain `python -m kfm` uses whatever Python your shell happens to have - usually a
 base conda install with a different scikit-learn, which cannot load these models.
 
-**Potency — rank compounds against one kinase:**
+**Potency - rank compounds against one kinase:**
 
 ```bash
 ./kfm.sh potency --target ABL1 \
@@ -186,10 +186,10 @@ Same columns, same order, same values as the website for the same input. The
 command line and the page are two views of one run.
 
 **Score** is the mean probability a compound is the more potent of a pair, across
-every comparison it took part in. It is *relative to the compounds you supplied* —
+every comparison it took part in. It is *relative to the compounds you supplied* -
 change the rivals and it changes.
 
-**Selectivity — compare 2 to 5 kinases:**
+**Selectivity - compare 2 to 5 kinases:**
 
 ```bash
 ./kfm.sh selectivity -t MTOR -t PIK3CA -t PIK3CG \
@@ -212,7 +212,7 @@ number in a row is the kinase that compound prefers. Every unordered pair is
 scored, so N kinases is N(N−1)/2 comparisons per compound. Five is the cap
 because 45 comparisons per compound stops being readable.
 
-**0.50 means no preference** — across a row the scores average to exactly 0.50 by
+**0.50 means no preference** - across a row the scores average to exactly 0.50 by
 construction, so the signal is distance from it. And **a preferred side is not
 activity**: the probabilities sum to 1, so something always wins, including for a
 compound that binds nothing.
@@ -229,7 +229,7 @@ See [`examples/README.md`](examples/README.md).
 ### 3️⃣ What leaves your machine
 
 `./install.sh` fetches the models once. **After that, nothing.** Predictions run
-entirely in your own process — your compounds, targets and results never leave
+entirely in your own process - your compounds, targets and results never leave
 the machine, and the tool works with the network switched off.
 
 The download brings the **complete** model, including the protein side: the
@@ -244,7 +244,7 @@ trained on, which needs the optional `requirements-sequences.txt`.
 distributions: 0.70 is right about 99% of the time on the training distribution
 and about 84% on held-out ChEMBL. Use it to rank and to threshold.
 
-**The two models' bands are not interchangeable** — different test sets. Read down
+**The two models' bands are not interchangeable** - different test sets. Read down
 a column, not across.
 
 | Confidence | Potency | Selectivity |
@@ -257,7 +257,7 @@ a column, not across.
 
 For potency, **52.7% of all comparisons land in that bottom band**. Accuracy also
 falls as chemistry gets newer: 0.726 when neither compound is new to the
-Knowledgebase, 0.673 when one is, and **0.582 when both are** — which is the
+Knowledgebase, 0.673 when one is, and **0.582 when both are** - which is the
 screening case.
 
 Full limitations: **<https://kinasefoundationmodel.com/v2/limitations.html>**
@@ -270,7 +270,7 @@ Method and every figure:
 ---
 
 <details>
-<summary><b>▶︎ ADD-ONS — use your own data (click to expand)</b></summary>
+<summary><b>▶︎ ADD-ONS - use your own data (click to expand)</b></summary>
 
 <br>
 
@@ -294,41 +294,77 @@ Measured on a contributor with 119,660 comparisons across five targets:
 `buildnew` overtakes the released model on your own targets at roughly 10,000
 comparisons. Off-target accuracy stays near 0.61 regardless of volume.
 
-```bash
-# merge your data into a released model, measuring the tree count on your holdout
-./kfm.sh extend --model potency --data mine.csv --out ./mine \
-    --sweep --holdout mine_holdout.csv
+Runnable now, against the files in `examples/`:
 
+```bash
 # fit on your data alone, no KFM weights involved
-./kfm.sh buildnew --layout potency --data mine.csv --out ./my_model --trees 300
+./kfm.sh buildnew --layout potency \
+    --data examples/measurements_example.csv --out ./my_model --allow-small
+
+# merge your data into a released model
+./kfm.sh extend --model potency \
+    --data examples/extend_potency_example.csv --out ./extended --allow-small
 ```
 
-**CSV format — supply measurements or comparisons.** Both tools accept either.
+`--allow-small` is needed only because the shipped examples are deliberately
+tiny. On real data, drop it and add a holdout so the tool measures rather than
+guesses how many trees to add:
 
-*Measurements*, one ligand and one target per row, which is the usual export
-from a knowledgebase or ChEMBL: `smiles`, `gene` or `sequence`, `pic50`, with an
-optional `relation`. The **same file builds either model** — for potency the
-tools pair the ligands measured on each target, for selectivity they pair the
-targets each ligand was measured against. Duplicates are collapsed by median,
-which member is A is randomised, and `--pairs-per-group` (default 5,000) stops
-one deeply screened target dominating.
+```bash
+./kfm.sh extend --model potency --data mine.csv --out ./mine \
+    --sweep --holdout mine_holdout.csv
+```
 
-*Comparisons*, already paired, if that is what you hold. Potency: `smiles_a`,
-`smiles_b`, and one `gene` or `sequence`. Selectivity: one `smiles` with
-`gene_a`/`sequence_a` and `gene_b`/`sequence_b`. Outcome either way is
-`pic50_a`/`pic50_b` with optional `relation_a`/`relation_b`, or a `winner`
-column of `A`/`B`. Raw sequences are embedded with the bundled ESM2 recipe.
+### Your data: one CSV, in whichever shape you already have
 
-Either way, every usable comparison is entered **twice**, once in each order
-with the label inverted. Do not supply both orders yourself.
+Both tools read both shapes and detect which one they were given. Prefer the
+first: it is what a knowledgebase or ChEMBL export already looks like, and one
+file builds either model.
 
-Both tools report how many measurements they could **not** pair, which is the
-number to read before trusting a model: a file rich enough for potency is often
-thin for selectivity, since selectivity needs the same compound measured on two
-targets.
+**Measurements** - one ligand, one target, one value per row:
+
+```
+smiles,gene,pic50,relation
+Cc1cc(Nc2ncc(C)c(N3CC(CC#N)(N4CCCC4)C3)n2)sn1,ABL1,5.45,=
+Cc1ccc(NC(=O)C2CCC2)c(F)c1-c1ccc2cc(NC(=O)C3CC3)ncc2c1,ABL1,9.7,=
+CN(C)CCCN1c2ccccc2Sc2ccc(Cl)cc21,EGFR,4.54,=
+```
+
+Required: `smiles`, a target, and a value. The target is `gene` for a kinase the
+model knows or `sequence` for anything else, including a non-kinase family. The
+value is `pic50`, `pvalue` or `pactivity`. `relation` is optional.
+
+The **same file builds either model**, because only the grouping differs:
+potency pairs the ligands measured on each target, selectivity pairs the targets
+each ligand was measured against. The tools do the pairing.
+
+**Comparisons** - already paired, if that is what you hold. Only the pair
+differs between the two models:
+
+```
+# potency: two ligands, one target
+smiles_a,gene,smiles_b,pic50_a,pic50_b,relation_a,relation_b
+
+# selectivity: one ligand, two targets
+smiles,gene_a,gene_b,pic50_a,pic50_b,relation_a,relation_b
+```
+
+Substitute `sequence`, `sequence_a`, `sequence_b` for the `gene` columns as
+above. In place of the two values you may give a single `winner` column of `A`
+or `B`. A file holding these columns is never reinterpreted as measurements.
+
+**What the tools do to it.** Duplicates are collapsed by median. Which member is
+A is randomised, so the forest cannot learn to score by reading a slot. Every
+usable comparison is then entered twice, once in each order with the label
+inverted, so do not supply both orders yourself. `--pairs-per-group` (default
+5,000) stops one deeply screened target dominating.
+
+**Read the unpaired count before trusting the model.** Both tools report what
+they could not pair. A file rich enough for potency is often thin for
+selectivity, which needs the same compound measured on two different targets.
 
 > [!TIP]
-> **🧬 Another target family?** Nothing here is kinase-specific — the same two
+> **🧬 Another target family?** Nothing here is kinase-specific - the same two
 > commands build potency and selectivity models for any family from the same
 > measurement file. **[`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md)** has
 > the full procedure, from an end-to-end GPCR port.
@@ -339,11 +375,14 @@ the concentration, so `IC50 > 1000 nM` becomes `pic50 6.0, relation <`. Copying
 it across without inverting labels weak compounds as potent and produces no
 error.
 
-**Shipped examples with known answers:**
-[`extend_potency_example.csv`](examples/extend_potency_example.csv) — 18 rows, 16
+**Shipped examples with known answers.** Measurements:
+[`measurements_example.csv`](examples/measurements_example.csv), 60 rows, builds
+either model. Comparisons:
+[`extend_potency_example.csv`](examples/extend_potency_example.csv), 18 rows, 16
 usable, 2 dropped ·
-[`extend_selectivity_example.csv`](examples/extend_selectivity_example.csv) — 16
-rows, all usable. Both need `--allow-small`.
+[`extend_selectivity_example.csv`](examples/extend_selectivity_example.csv), 16
+rows, all usable. All three need `--allow-small`, being far below the volume
+either tool would otherwise insist on.
 
 Full documentation: **[`docs/EXTEND.md`](docs/EXTEND.md)** ·
 specification and validation record:
@@ -352,7 +391,7 @@ specification and validation record:
 </details>
 
 <details>
-<summary><b>▶︎ VERSION 1 — a predicted pIC50 value (click to expand)</b></summary>
+<summary><b>▶︎ VERSION 1 - a predicted pIC50 value (click to expand)</b></summary>
 
 <br>
 
@@ -375,7 +414,7 @@ cd KFM
 ./install.sh v1
 ```
 
-0.86 GB to download, **6.4 GB of RAM** to run — comfortable on a 16 GB laptop.
+0.86 GB to download, **6.4 GB of RAM** to run - comfortable on a 16 GB laptop.
 Use `./install.sh all` to get version 1 alongside both version 2 models.
 
 ```bash
@@ -385,7 +424,7 @@ Use `./install.sh all` to get version 1 alongside both version 2 models.
 ```
 
 ```
-Version 1 — predicted pIC50 against ABL1
+Version 1 - predicted pIC50 against ABL1
 
 #  Compound   pIC50  SMILES
 -  ---------  -----  -----------------------------------------------------------
@@ -398,7 +437,7 @@ Version 1 — predicted pIC50 against ABL1
 - **Not comparable between kinases.** Each target is on its own scale, so the
   difference between two targets' scores reports scale differences as if they
   were selectivity. Use version 2 selectivity for that question.
-- **Per-target accuracy ranges from 0.09 to 0.83** — strong on some kinases, no
+- **Per-target accuracy ranges from 0.09 to 0.83** - strong on some kinases, no
   better than chance on others. Check the per-target figure before trusting a
   result.
 
@@ -412,8 +451,8 @@ Version 1 — predicted pIC50 against ABL1
 
 `--ligand` / `-l` takes a SMILES, `"SMILES name"`, or `@file`:
 
-- `.smi` / `.txt` — one per line, optional name after whitespace or a tab; `#` starts a comment line
-- `.csv` — a header naming a `smiles` column, optionally `name`
+- `.smi` / `.txt` - one per line, optional name after whitespace or a tab; `#` starts a comment line
+- `.csv` - a header naming a `smiles` column, optionally `name`
 
 `--target` / `-t` takes a gene symbol, or `@file` holding a protein sequence
 (FASTA headers are stripped). Scoring a sequence the model was **not** trained on
@@ -422,7 +461,7 @@ accuracy figure.
 
 ### Where the weights live, and how to move them
 
-**`./kfm-models`**, in the directory you ran the download from — in plain sight,
+**`./kfm-models`**, in the directory you ran the download from - in plain sight,
 not in a hidden cache under your home directory.
 
 ```bash
@@ -473,14 +512,14 @@ gone.
 and can be copied and pasted straight into a shell, a notebook or the website.
 The same applies to the tool's own output, the emailed reports and the web
 pages: a clipped SMILES cannot be pasted back, cannot be checked against a
-notebook, and two different compounds can share their first forty characters —
+notebook, and two different compounds can share their first forty characters -
 so an ellipsis loses the identity of the very thing being ranked. If a table is
 too wide, wrap it or let it scroll. Do not shorten the structure.
 
 ### What the models were trained on
 
 All three models were fitted on the
-**[Eidogen-Sertanty Kinase Knowledgebase (KKB)](https://eidogen-sertanty.com/kinasekbmarvin.php)** — and on nothing else.
+**[Eidogen-Sertanty Kinase Knowledgebase (KKB)](https://eidogen-sertanty.com/kinasekbmarvin.php)** - and on nothing else.
 No ChEMBL, no BindingDB, no other source went into training; ChEMBL was used
 exclusively as an unseen test set, which is where every accuracy figure quoted
 here comes from.
@@ -492,7 +531,7 @@ research and evaluation use: **<https://eidogen-sertanty.com/kinasekbmarvin.php>
 
 ### Try it in a browser first
 
-<https://kinasefoundationmodel.com/v2/> — the same models, no install.
+<https://kinasefoundationmodel.com/v2/> - the same models, no install.
 
 ---
 
