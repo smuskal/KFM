@@ -315,6 +315,40 @@ guesses how many trees to add:
     --sweep --holdout mine_holdout.csv
 ```
 
+### Data too big to fit in memory
+
+`buildnew` handles it automatically. Nothing to pass.
+
+Every comparison is entered twice as float32, so the design matrix is
+`2 x comparisons x features x 4` bytes: 2,556 features for potency, 1,998 for
+selectivity. That reaches 64 GB at about four million comparisons. When it will
+not fit, `buildnew` fits in chunks and pools the trees, and says so:
+
+```
+design matrix 45,000,000 x 2,556 (428.47 GB) after the swap
+  fitting in 14 chunks of about 30.61 GB, pooling the trees
+  chunk 1/14: 1,607,143 comparisons, 22 trees, 1204s -> chunk_001.joblib
+```
+
+Trees are independent, so forests fitted on different samples merge into one by
+concatenating them. Each chunk holds an even share of every target, so a heavily
+measured kinase cannot crowd out the rest. Chunks are checkpointed, so an
+interrupted run resumes instead of restarting.
+
+| flag | use |
+|---|---|
+| `--max-memory-gb G` | how much the matrix may use. Default: half this machine |
+| `--chunks N` | force a chunk count. `1` forces a single fit |
+| `--checkpoint-dir DIR` | where chunk forests go. Default `<out>/chunks` |
+
+`--trees` stays the total across all chunks, not per chunk.
+
+**Chunking is a memory trade, not a free win.** Each tree sees one chunk, so with
+your data held fixed more chunks means weaker trees. On a 40,402 comparison set,
+holdout accuracy fell from 0.769 in one chunk to 0.708 in twenty. Use the fewest
+chunks your memory allows, which is what the automatic choice does. Chunking pays
+when it lets you fit data that would not fit at all.
+
 ### Your data: one CSV, in whichever shape you already have
 
 Both tools read both shapes and detect which one they were given. Prefer the

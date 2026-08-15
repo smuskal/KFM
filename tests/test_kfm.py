@@ -456,6 +456,52 @@ class TestMeasurementInput:
         assert kx._is_measurement_file({"smiles", "gene", "pic50"}, "LSL")
 
 
+class TestChunkPlanning:
+    """The arithmetic that decides whether a fit has to be chunked.
+
+    No bundle needed, so these always run. The two reference points are the
+    released models' own design matrices, and they are what makes this testable
+    rather than a guess.
+    """
+
+    def test_matrix_size_matches_the_released_selectivity_model(self):
+        from kfm.buildnew import matrix_gb
+        # SeqALigSeqB v2: 4,340,117 comparisons, 1,998 features, and its spec
+        # records the resulting matrix as 64.6 GB.
+        assert round(matrix_gb(4_340_117, 1998), 1) == 64.6
+
+    def test_a_fit_that_fits_is_not_chunked(self):
+        from kfm.buildnew import plan_chunks
+        assert plan_chunks(5_000, 2556, budget_gb=32, trees=300) == 1
+
+    def test_a_fit_that_does_not_fit_is_split(self):
+        from kfm.buildnew import plan_chunks
+        # The released potency pool: 22.5M comparisons at 2,556 features is
+        # 428 GB, so a 31 GB budget cannot take it in one pass.
+        assert plan_chunks(22_500_000, 2556, budget_gb=31, trees=300) == 14
+
+    def test_never_more_chunks_than_trees(self):
+        from kfm.buildnew import plan_chunks
+        assert plan_chunks(10**9, 2556, budget_gb=1, trees=8) == 8
+
+    def test_every_chunk_gets_a_share_of_every_group(self):
+        """The sampling rule, and it is not cosmetic.
+
+        A uniform split hands one chunk all of a rare target and the others
+        none, so most trees never see it. Round-robin within each group keeps
+        every target in every chunk.
+        """
+        from kfm.buildnew import stratified_chunks
+        usable = ([("a", "b", ("gene", "EGFR"), None, 1, False)] * 100
+                  + [("c", "d", ("gene", "CSK"), None, 1, False)] * 6)
+        parts = stratified_chunks(usable, "LSL", 3, seed=0)
+        assert len(parts) == 3
+        for p in parts:
+            genes = {usable[i][2][1] for i in p}
+            assert genes == {"EGFR", "CSK"}, f"a chunk missed a target: {genes}"
+        assert sum(len(p) for p in parts) == len(usable), "rows were lost or duplicated"
+
+
 def run_tool(*args, timeout=1800):
     """Invoke `extend` or `buildnew` the way a user does.
 
@@ -495,6 +541,44 @@ class TestBuildNewEndToEnd:
         assert man["layout"] == "potency"
         assert any(f.endswith(".joblib") for f in os.listdir(out)), \
             f"no model written; tool said:\n{log[-1500:]}"
+
+    def test_chunked_and_pooled_gives_the_trees_asked_for(self, tmp_path):
+        """--trees is the total across all chunks, not per chunk.
+
+        Getting this wrong multiplies the forest by the chunk count, which is
+        the kind of error that shows up as a mysteriously enormous model file
+        rather than as a failure.
+        """
+        out = tmp_path / "pooled"
+        run_tool("buildnew", "--layout", "potency",
+                 "--data", _example("measurements_example.csv"),
+                 "--out", str(out), "--trees", "12", "--chunks", "3",
+                 "--allow-small")
+        import joblib
+        man = json.load(open(out / "MANIFEST.json"))
+        assert man["training"]["chunks"] == 3
+        assert man["hyperparameters"]["n_estimators"] == 12
+        forest = joblib.load(out / man["model_file"])
+        assert forest.n_estimators == 12
+        assert len(forest.estimators_) == 12
+
+    def test_chunks_are_checkpointed_and_reused(self, tmp_path):
+        """An interrupted chunked fit must cost one chunk, not the whole run."""
+        out = tmp_path / "ckpt"
+        run_tool("buildnew", "--layout", "potency",
+                 "--data", _example("measurements_example.csv"),
+                 "--out", str(out), "--trees", "9", "--chunks", "3",
+                 "--allow-small")
+        chunks = sorted((out / "chunks").glob("chunk_*.joblib"))
+        assert len(chunks) == 3, [c.name for c in chunks]
+        stamps = {c.name: c.stat().st_mtime_ns for c in chunks}
+        log = run_tool("buildnew", "--layout", "potency",
+                       "--data", _example("measurements_example.csv"),
+                       "--out", str(out), "--trees", "9", "--chunks", "3",
+                       "--allow-small")
+        assert "reusing" in log
+        for c in sorted((out / "chunks").glob("chunk_*.joblib")):
+            assert c.stat().st_mtime_ns == stamps[c.name], f"{c.name} was refitted"
 
     @needs_selectivity
     def test_the_same_file_builds_the_selectivity_layout(self, tmp_path):
@@ -585,8 +669,13 @@ class TestExtendEndToEnd:
         run_tool("extend", "--model", "potency",
                  "--data", _example("extend_potency_example.csv"),
                  "--out", str(out), "--trees", "5", "--allow-small")
-        base = bundles.bundle_dir("potency")
-        base_file = json.load(open(os.path.join(base, "MANIFEST.json")))["model_file"]
+        # Resolve the base filename the way the tool does. A bundle manifest is
+        # not required to carry `model_file`; Bundle falls back to finding the
+        # single .joblib, and a test that assumed the key was always present
+        # failed against a bundle that omits it.
+        import kfm.extend as kx
+        base_file = kx.Bundle(bundles.bundle_dir("potency"),
+                              load_model=False, kind="potency").model_file
         assert json.load(open(out / "MANIFEST.json"))["model_file"] == base_file
         assert os.path.exists(out / base_file)
 
