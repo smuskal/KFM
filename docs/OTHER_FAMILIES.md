@@ -35,7 +35,7 @@ CC(C)n1nc(...)c2c(N)ncnc12,ADRB2,8.0,=
 COc1cc(...)c(Cl)cc1Cl,ADRB2,5.0,=
 ```
 
-Use `sequence` in place of `gene` for a non-kinase family — see section 3.
+Use `sequence` in place of `gene` for a non-kinase family - see section 3.
 
 The **same file builds either model**. For potency the tools pair the ligands
 measured on each target; for selectivity they pair the targets each ligand was
@@ -51,7 +51,7 @@ Both tools report what they could not use:
 ```
 
 Read that number. A file that is rich for potency is often thin for
-selectivity — selectivity needs the *same compound measured on two targets*,
+selectivity - selectivity needs the *same compound measured on two targets*,
 which most screening data does not contain in quantity.
 
 KFM also collapses duplicate measurements by median, randomises which member of
@@ -103,7 +103,7 @@ pip install -r requirements-sequences.txt
 
 Sequence lookups are keyed by a hash of the normalised sequence, so a sequence
 from another family misses the bundled index and is embedded fresh. A hit can
-only occur for a byte-identical sequence, which is the same protein — the
+only occur for a byte-identical sequence, which is the same protein - the
 sequence path cannot return a wrong target.
 
 `buildnew` will not copy the recipe's gene and vector lookup tables into your
@@ -120,7 +120,7 @@ in a test pair is not a held-out prediction.
 **Report where on the novelty scale your number sits.** Following Mattsson and
 Walters (bioRxiv 2026.06.29.735309), partition your test set by each compound's
 maximum Tanimoto to the compounds you fitted on, on a *binary* Morgan r=2
-*2,048-bit* fingerprint — deliberately not the count-based 1,024-bit vector the
+*2,048-bit* fingerprint - deliberately not the count-based 1,024-bit vector the
 model consumes:
 
 | Tier | Max Tanimoto |
@@ -144,15 +144,15 @@ In the GPCR port, a meaningful share of held-out ligands still sat at Tanimoto
 **Run the sequence ablation, and be careful which one you run.** There are two
 variants and they answer different questions.
 
-*Refit ablation — the one to run.* Retrain the model with the sequence block
+*Refit ablation - the one to run.* Retrain the model with the sequence block
 zeroed, and again with the sequence vectors **permuted**: each target
 consistently given another target's embedding, so target identity survives as a
 lookup key while its correspondence to biology is destroyed. If the refit on
 permuted vectors scores as well as the original, the model never needed the
-biology — it simply relearns the permuted vector as an arbitrary per-target
+biology - it simply relearns the permuted vector as an arbitrary per-target
 index. That is the proteochemometric failure mode Mattsson and Walters describe.
 
-*Re-score ablation — a different question.* Feeding permuted vectors to an
+*Re-score ablation - a different question.* Feeding permuted vectors to an
 **already-trained** model at prediction time cannot come out neutral: the model
 was fitted against one mapping and is being handed another, so a large drop is
 expected whatever the embedding means. It tells you the model depends on the

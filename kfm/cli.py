@@ -100,7 +100,7 @@ def cmd_potency(args) -> int:
             + "\n\nSCORE orders the table: how often the model expects this compound to"
               "\nbe the more potent one, averaged over every comparison against the"
               "\nothers you supplied. 1.00 beat them all, 0.00 lost to them all, 0.50"
-              "\nbroke even. Change the other compounds and it moves — it is a position"
+              "\nbroke even. Change the other compounds and it moves - it is a position"
               "\nwithin your set, not a property of the molecule."
               "\n\nCONFIDENCE is how decisive those comparisons were, 0.50 being a coin"
               "\nflip. It does NOT say the compound is good: one the model confidently"
@@ -180,11 +180,11 @@ def cmd_selectivity(args) -> int:
                 ["Compound", "SMILES"] + targets, rows,
                 ["<", "<"] + [">"] * len(targets))
             + "\n\nEach number is how strongly that compound prefers that kinase over"
-              "\nthe others listed. 0.50 means NO PREFERENCE — the signal is distance"
+              "\nthe others listed. 0.50 means NO PREFERENCE - the signal is distance"
               "\nfrom 0.50 in either direction. The scores are relative to the kinases"
               "\nyou chose: adding another moves them all."
               "\n\nA PREFERRED SIDE IS NOT ACTIVITY. The probabilities sum to 1, so one"
-              "\nkinase always wins — including for a compound that binds none of them."
+              "\nkinase always wins - including for a compound that binds none of them."
               "\n\nThe highest number in a row is the kinase that compound prefers."
               "\nRun with --json for the per-pair probabilities and the measured"
               "\naccuracy of each confidence band.")
@@ -198,7 +198,7 @@ def cmd_selectivity(args) -> int:
 # v1: predicted pIC50 for compounds against ONE kinase
 #
 # This is a REGRESSION, not a comparison, which is the whole difference from the
-# v2 models. It returns a number on the pIC50 scale — and that number is only
+# v2 models. It returns a number on the pIC50 scale - and that number is only
 # meaningful WITHIN one kinase. The v1 scorer puts each target on its own scale,
 # so subtracting two targets' scores reports scale differences as if they were
 # selectivity, which is exactly the mistake the v2 selectivity model exists to
@@ -234,7 +234,7 @@ def cmd_v1(args) -> int:
         payload.append({"rank": i + 1, "name": name, "smiles": smi,
                         "predicted_pIC50": float(score)})
 
-    text = (f"Version 1 — predicted pIC50 against {target}\n\n"
+    text = (f"Version 1 - predicted pIC50 against {target}\n\n"
             + kio.fmt_table(["#", "Compound", "pIC50", "SMILES"], rows,
                             ["<", "<", ">", "<"])
             + "\n\nThese are predicted pIC50 values on THIS kinase's own scale."

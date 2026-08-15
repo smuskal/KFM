@@ -1,4 +1,4 @@
-# kfm extend — specification
+# kfm extend - specification
 
 **Works on both released v2 models.** The tool reads the layout from the bundle's
 `MANIFEST.json` and adapts: `LigASeqLigB` potency is `[ ligand A 1038 | sequence 480 |
@@ -19,7 +19,7 @@ over all of them. Trees fitted on different data can therefore be merged by conc
 independent 20-tree fits.
 
 What crosses the boundary is the **feature recipe**, not the corpus. The partner needs the
-column layout, the ligand encoder and the ESM2 recipe — all of which already ship in
+column layout, the ligand encoder and the ESM2 recipe - all of which already ship in
 `predict.py` and `embed.py`.
 
 ## 2. What is preserved, and what is not
@@ -82,7 +82,7 @@ protein axis**, not just the chemistry.
 
 ### Required: the outcome, one of two ways
 
-**Preferred — give the measurements and let the tool decide:**
+**Preferred - give the measurements and let the tool decide:**
 
 | column | meaning |
 |---|---|
@@ -106,16 +106,16 @@ transformation is visible rather than described:
 
 Rows are used only when the two intervals are disjoint and the winner is decidable:
 
-- point vs point — usable when the values differ
-- point vs a `<` bound — usable when the point is above the bound
-- point vs a `>` bound — usable when the point is below the bound
-- `>` vs `<` — usable when the `>` value exceeds the `<` value
-- two bounds in the same direction — never usable, dropped and counted
+- point vs point - usable when the values differ
+- point vs a `<` bound - usable when the point is above the bound
+- point vs a `>` bound - usable when the point is below the bound
+- `>` vs `<` - usable when the `>` value exceeds the `<` value
+- two bounds in the same direction - never usable, dropped and counted
 
 Two identical exact values are a **tie**: kept, and entered with the same label in both
 orders so the model learns to return about 0.5 rather than inventing a winner.
 
-**Alternative — give the answer directly:**
+**Alternative - give the answer directly:**
 
 | column | meaning |
 |---|---|
@@ -167,7 +167,7 @@ each of these stops the run rather than warning:
 2. class order mismatch
 3. scikit-learn major.minor differing from the base bundle's manifest
 4. fewer than 1,000 usable rows after filtering, which cannot support a useful tree
-5. every row unusable — reports which rule dropped them
+5. every row unusable - reports which rule dropped them
 
 ## 8. What the merged bundle contains
 
@@ -242,8 +242,8 @@ laid out:
 | row width | 2,556 | 1,998 |
 | base `min_samples_leaf` | 20 | 8 |
 
-**The merged model keeps the base model's filename** — `LigASeqLigB_v2_potency.joblib` and
-`model.joblib` respectively — so each bundle's own `predict.py` loads it with no code
+**The merged model keeps the base model's filename** - `LigASeqLigB_v2_potency.joblib` and
+`model.joblib` respectively - so each bundle's own `predict.py` loads it with no code
 change. The new name lives in `MANIFEST.json` and in the directory name. This was found by
 testing: the selectivity `predict.py` hardcodes `model.joblib`, so renaming the artifact
 broke it.
@@ -275,7 +275,7 @@ encumbrance and can ship publicly:
 
 ---
 
-## 12. `kfm buildnew` — the companion utility
+## 12. `kfm buildnew` - the companion utility
 
 `kfm_buildnew.py` fits a model on the contributor's data **alone**. No KFM weights are
 loaded, merged or consulted. The output has the same feature layout and the same interface
@@ -342,7 +342,7 @@ never opened.
 | loads in the bundle's own `predict.py` | yes | yes |
 | scores the ChEMBL examples | 10/10 | 7/10 |
 | released model byte-identical afterwards | yes | yes |
-| holdout, 7,974 comparisons | **0.7761** against 0.7027 released, +0.0735 | — |
+| holdout, 7,974 comparisons | **0.7761** against 0.7027 released, +0.0735 | - |
 
 The selectivity demo scoring 7/10 against the released model's 10/10 is the expected and
 correct result for a model fitted on sixteen rows, and is left in the record rather than
@@ -354,7 +354,7 @@ contributor's model and nothing about the released accuracies applies to it.
 
 ---
 
-## 13. `--sweep` — measure the tree count instead of guessing it
+## 13. `--sweep` - measure the tree count instead of guessing it
 
 Section 3 gives our measured trade-off curve. It is the right shape but it is our
 contributor's curve, not yours. `--sweep` produces yours.
@@ -373,7 +373,7 @@ contributor's curve, not yours. `--sweep` produces yours.
 ### It is exact, and it costs one fit
 
 A forest's vote at N trees is the mean over its first N, and **the first N trees of a
-larger fit are identical to an N-tree fit at the same seed** — verified by comparing tree
+larger fit are identical to an N-tree fit at the same seed** - verified by comparing tree
 structure and thresholds, not assumed. So `--sweep` fits once at `max(sweep_points)`,
 accumulates per-tree votes in a single pass, and reads every point off the running mean.
 Seven points cost one fit rather than seven.
@@ -400,7 +400,7 @@ in the extension log.
 
 ### The breadth check is automatic
 
-Each bundle ships a reference set of ChEMBL comparisons spanning the whole panel —
+Each bundle ships a reference set of ChEMBL comparisons spanning the whole panel -
 `breadth_reference_potency.csv`, 3,744 comparisons over 468 targets, and
 `breadth_reference_selectivity.csv`, 4,000 over 334. `--sweep` uses it by default, so the
 normal invocation is just:
@@ -409,7 +409,7 @@ normal invocation is just:
         --sweep --holdout mine_holdout.csv
 
 There are only two other states. Pass `--holdout-breadth none` and the table prints gains
-only, no recommendation is made, and the build falls back to `--trees` — because a sweep
+only, no recommendation is made, and the build falls back to `--trees` - because a sweep
 that sees what you gain and never what you give up is the thing that makes people over-set
 the count. And `--sweep` with no `--holdout` at all stops with an explanation, since there
 is nothing to measure against.

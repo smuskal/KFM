@@ -5,7 +5,7 @@ Two small files, drawn from the Eidogen-Sertanty Kinase Knowledgebase, with the
 yourself whether the models order things correctly, rather than taking a headline
 accuracy figure on trust.
 
-These are held-out examples in the sense that matters here — you can check the
+These are held-out examples in the sense that matters here - you can check the
 model's output against a measurement without having to look anything up.
 
 | File | Use with | Truth encoded in the name |
@@ -15,7 +15,7 @@ model's output against a measurement without having to look anything up.
 
 ---
 
-## Potency — works for both versions
+## Potency - works for both versions
 
 Five ABL1 compounds spanning **8 log units**, from pIC50 12.10 down to 4.00.
 
@@ -33,12 +33,12 @@ python -m kfm potency -t ABL1 -l @examples/ABL1_potency.smi
 5  ABL1_rank5_KKB_pIC50_4.000   CC1=CN2CC(=O)NN=C2C=C1                                                                 0.215        0.78
 ```
 
-**The order is exactly right — 1, 2, 3, 4, 5.**
+**The order is exactly right - 1, 2, 3, 4, 5.**
 
 Notice the confidences, though: most of these comparisons sit in the 0.60–0.70
 band, where the model is right about three quarters of the time. Getting all five
 in order here is a good result, not a guaranteed one. The one pair it is most
-confident about (0.78) is the weakest compound against the rest — which is the
+confident about (0.78) is the weakest compound against the rest - which is the
 easy call.
 
 The same file works with version 1, which returns a value rather than a
@@ -60,7 +60,7 @@ python -m kfm v1 -t ABL1 -l @examples/ABL1_potency.smi
 
 Also correctly ordered, and worth comparing against the true values in the names:
 the middle of the range is close (7.79 predicted against 8.05 measured; 5.74
-against 6.05), but **the top end is compressed** — 9.23 predicted for a compound
+against 6.05), but **the top end is compressed** - 9.23 predicted for a compound
 measured at 12.10. That is characteristic of a regression fitted on a distribution
 where extreme potencies are rare, and it is one reason to prefer the version 2
 ordering when the question is "which of these is better" rather than "how potent
@@ -95,7 +95,7 @@ Two details worth reading properly:
   scores 0.81. The model is less certain when the real difference is smaller,
   which is the behaviour you want.
 - **0.50 means no preference.** cpd1's MTOR score of 0.30 says it *disprefers*
-  MTOR — correct, it is measured 5 log units weaker there.
+  MTOR - correct, it is measured 5 log units weaker there.
 
 ---
 
@@ -103,12 +103,12 @@ Two details worth reading properly:
 
 Eight compounds is a demonstration, not a validation. The published accuracies
 come from 1.8 million (potency) and 3.1 million (selectivity) held-out ChEMBL
-comparisons, and they are the numbers to quote — see
+comparisons, and they are the numbers to quote - see
 <https://kinasefoundationmodel.com/v2/limitations.html>.
 
 In particular, these examples were chosen to span wide potency gaps, which is
 where the models are strongest. **Compounds that are close in potency come back
-near 0.50 and are declined rather than guessed** — that is correct behaviour, and
+near 0.50 and are declined rather than guessed** - that is correct behaviour, and
 you will see much more of it on a real series of analogues than you see here.
 
 ## File format

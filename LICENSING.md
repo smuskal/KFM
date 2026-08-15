@@ -1,4 +1,4 @@
-# Licensing — how this repository is split, and why
+# Licensing - how this repository is split, and why
 
 **You do not need a second GitHub repository.** One repository can carry two
 licenses as long as it is unambiguous which file is under which. That is the
@@ -11,7 +11,7 @@ is what this repository does.
 | What | License | File |
 |---|---|---|
 | All source code, CLI tools, docs, examples | **Apache License 2.0** | `LICENSE` |
-| Trained model artefacts — the `.joblib` forests, the `*_vectors.npz` caches, their index and gene-map files | **Research and evaluation only** | `LICENSE-MODELS.txt` |
+| Trained model artefacts - the `.joblib` forests, the `*_vectors.npz` caches, their index and gene-map files | **Research and evaluation only** | `LICENSE-MODELS.txt` |
 
 The boundary is the trained artefact. Anything a computer *ran* is Apache-2.0.
 Anything that *came out of training on the KKB* is under the model license.
@@ -21,7 +21,7 @@ Anything that *came out of training on the KKB* is under the model license.
 The weights are a derived work of the Kinase Knowledgebase, which is the
 commercial asset. Apache-2.0 is irrevocable and permits commercial use and
 redistribution, so releasing the weights under it would give away, permanently,
-the thing customers pay for — and it could not be walked back afterwards, because
+the thing customers pay for - and it could not be walked back afterwards, because
 every copy already distributed keeps its grant.
 
 Apache-2.0 is exactly right for the *code*: it is permissive, it is compatible
@@ -38,7 +38,7 @@ license, all you need is:
 1. Keep `LICENSE` exactly as GitHub created it (Apache-2.0).
 2. Add `LICENSE-MODELS.txt` (in this directory) at the repository root.
 3. Add `LICENSING.md` (this file) at the root.
-4. Make sure the `README.md` states the split near the top — ours does.
+4. Make sure the `README.md` states the split near the top - ours does.
 5. Put a `NOTICE` file at the root. Apache-2.0 has a specific mechanism for
    this: a `NOTICE` file travels with redistributions, so it is the correct
    place to record that the repository contains separately-licensed artefacts.

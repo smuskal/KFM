@@ -7,7 +7,7 @@
 # ----------------------------------------------------
 # Conda supplies the interpreter and pip supplies everything else, deliberately.
 # Mixing conda-forge's rdkit with pip's numpy/scipy in one environment breaks
-# scipy's extension modules — the two build against different binary stacks.
+# scipy's extension modules - the two build against different binary stacks.
 # Picking one packaging system for the scientific libraries avoids that whole
 # class of problem, and pip is the one whose exact versions were used to fit and
 # verify these forests.
@@ -17,7 +17,7 @@
 # Conda copies this file's pip block to a temporary file before running it, so a
 # relative `-r requirements.txt` resolves against /tmp and fails with
 # "Could not open requirements file". Repeating the pins is the reliable form.
-# They must match requirements.txt exactly — `tests/test_kfm.py` asserts that, so
+# They must match requirements.txt exactly - `tests/test_kfm.py` asserts that, so
 # the two cannot drift.
 #
 # The pins are not suggestions. A joblib-pickled random forest is a pickled

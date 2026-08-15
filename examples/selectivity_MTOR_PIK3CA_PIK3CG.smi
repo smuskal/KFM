@@ -1,4 +1,4 @@
-# Selectivity example — MTOR vs PIK3CA vs PIK3CG
+# Selectivity example - MTOR vs PIK3CA vs PIK3CG
 #
 # Run with:
 #   python -m kfm selectivity -t MTOR -t PIK3CA -t PIK3CG \

@@ -1,7 +1,7 @@
 """Finding, downloading and loading a model bundle.
 
 A "bundle" is the directory the model ships as: the forest, the sequence-vector
-cache, the index files, and — the part that matters — **the model's own
+cache, the index files, and - the part that matters - **the model's own
 `predict.py`**. Scoring always goes through that file. This package never
 reimplements the maths, because the two models do genuinely different things
 with their inputs (the potency forest averages both ligand orders to compensate
@@ -10,7 +10,7 @@ because its training augmentation already made it symmetric). A reimplementation
 that got that wrong would disagree with every published number while looking
 perfectly reasonable.
 
-WHERE THE WEIGHTS COME FROM. They are NOT in the git repository — they are
+WHERE THE WEIGHTS COME FROM. They are NOT in the git repository - they are
 several gigabytes, GitHub rejects anything over 100 MB, and they are under a
 different licence from this code (see LICENSE-MODELS.txt). They are fetched from
 kinasefoundationmodel.com on first use and cached.
@@ -107,7 +107,7 @@ def bundle_dir(model: str) -> str:
     """Where this model's bundle lives, wherever it came from.
 
     Resolution order, first hit wins:
-      1. KFM_BUNDLE_<MODEL>   — an explicit directory, for testing against a
+      1. KFM_BUNDLE_<MODEL>   - an explicit directory, for testing against a
                                 bundle you already have
       2. <cache_root>/<bundle-name>
     """

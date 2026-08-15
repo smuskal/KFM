@@ -187,7 +187,7 @@ Recommended: 80 trees, the largest whose breadth loss stays within 0.005.
 
 `--holdout` is your comparisons on targets you cover. `--holdout-breadth` is
 comparisons on targets you do not; it defaults to the reference set shipped in
-the bundle — `breadth_reference_potency.csv`, 3,744 comparisons over 468 targets,
+the bundle - `breadth_reference_potency.csv`, 3,744 comparisons over 468 targets,
 or `breadth_reference_selectivity.csv`, 4,000 over 334, both ChEMBL-derived.
 `--holdout-breadth none` skips the breadth check.
 
@@ -205,7 +205,7 @@ contributing, scored identically at every tree count, so the `cost` column means
 something. Without it the sweep could report `gain` alone and would recommend the
 largest tree count every time.
 
-The shipped sets are ChEMBL-derived and are held out from the released models —
+The shipped sets are ChEMBL-derived and are held out from the released models -
 the released potency model scores 0.7188 on `breadth_reference_potency.csv`,
 its generalisation accuracy rather than a memorisation signature.
 
@@ -214,8 +214,8 @@ them.** The format is exactly the contribution format described above, so any
 file you could pass to `--data` you can pass to `--holdout-breadth`. Two reasons
 to do so:
 
-- **Relevance.** If the panel you care about is narrower than the kinome — a
-  family, a therapeutic area, a set of anti-targets you must not lose — build a
+- **Relevance.** If the panel you care about is narrower than the kinome - a
+  family, a therapeutic area, a set of anti-targets you must not lose - build a
   breadth set over *those* targets. A recommendation tuned to average loss across
   468 targets is not tuned to the twenty you actually ship against.
 - **Resolution.** Accuracy measured on a finite set carries noise, and the
@@ -225,7 +225,7 @@ to do so:
   recommendation is being read at about one standard error. Roughly quadrupling
   the number of comparisons halves that noise. If you are choosing between
   adjacent sweep rows whose `cost` figures differ by less than about 0.005, that
-  difference is not resolvable on the shipped set — either enlarge the set or
+  difference is not resolvable on the shipped set - either enlarge the set or
   treat those rows as tied and take the smaller tree count.
 
 Passing more comparisons costs only scoring time, which is linear and small
