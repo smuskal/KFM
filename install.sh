@@ -11,7 +11,7 @@
 #
 # It prefers conda and falls back to python's own venv, so a missing or broken
 # conda is not a dead end. It refuses to finish unless each model it installed
-# returns its published answer — "it installed" and "it works" are the same
+# returns its published answer - "it installed" and "it works" are the same
 # statement here, not two different ones.
 set -euo pipefail
 
@@ -45,7 +45,7 @@ for m in "${MODELS[@]}"; do
   esac
 done
 
-say "Kinase Foundation Model — self-contained install"
+say "Kinase Foundation Model - self-contained install"
 echo "  installing:    ${MODELS[*]}"
 echo "  everything in: $HERE"
 echo "  environment:   $ENVDIR"
@@ -129,7 +129,16 @@ fi
 
 PY="$ENVDIR/bin/python"
 [ -x "$PY" ] || fail "no interpreter at $PY"
-"$PY" -m pip install --quiet -e "$HERE" >/dev/null 2>&1 || true
+
+# Not fatal, and deliberately so: `./kfm.sh` and `python -m kfm` both work from
+# this directory whether or not the editable install lands. Only the bare `kfm`
+# console script needs it. But swallowing the output entirely meant a failure
+# here was completely invisible, so say so and carry on rather than hiding it.
+if ! "$PY" -m pip install --quiet -e "$HERE" >/tmp/kfm_editable_install.log 2>&1; then
+  printf '\n\033[33m  NOTE: the editable install did not complete.\n'
+  printf '  ./kfm.sh and ./env/bin/python -m kfm still work; only the bare `kfm`\n'
+  printf '  command is unavailable. Details: /tmp/kfm_editable_install.log\033[0m\n'
+fi
 
 # --- 2. what actually got installed -----------------------------------------
 say "2/4  libraries installed"
@@ -166,17 +175,17 @@ for m in "${MODELS[@]}"; do
       OUT=$( cd "$HERE" && "$PY" -m kfm potency -t ABL1 -l "$BOS bosutinib" -l "$PP1 PP1-type" 2>&1 )
       echo "$OUT" | grep -q "0.847" \
         || { echo "$OUT" | head -6; fail "potency: bosutinib did not score 0.847 against ABL1."; }
-      ok "  potency      bosutinib 0.847 vs ABL1 — matches the published report" ;;
+      ok "  potency      bosutinib 0.847 vs ABL1 - matches the published report" ;;
     selectivity)
       OUT=$( cd "$HERE" && "$PY" -m kfm selectivity -t ABL1 -t GSK3B -l "$DAS dasatinib" 2>&1 )
       echo "$OUT" | grep -q "0.97" \
         || { echo "$OUT" | head -6; fail "selectivity: dasatinib did not prefer ABL1 at 0.97 over GSK3B."; }
-      ok "  selectivity  dasatinib prefers ABL1 0.97 over GSK3B — matches the report" ;;
+      ok "  selectivity  dasatinib prefers ABL1 0.97 over GSK3B - matches the report" ;;
     v1)
       OUT=$( cd "$HERE" && "$PY" -m kfm v1 -t ABL1 -l "$BOS bosutinib" -l "$PP1 PP1-type" 2>&1 )
       echo "$OUT" | grep -q "8.69" \
         || { echo "$OUT" | head -6; fail "v1: bosutinib did not score 8.69 against ABL1."; }
-      ok "  v1           bosutinib 8.69 vs ABL1 — matches the published report" ;;
+      ok "  v1           bosutinib 8.69 vs ABL1 - matches the published report" ;;
   esac
 done
 
@@ -187,11 +196,22 @@ cat <<EOF
 
 Always use ./kfm.sh (or ./env/bin/python -m kfm). It runs the environment this
 script just built. Typing plain \`python -m kfm\` or \`kfm\` uses whatever python
-your shell happens to have — usually a base conda install with a different
+your shell happens to have - usually a base conda install with a different
 scikit-learn, which cannot load these models.
 
   ./kfm.sh where                     # where the models are, and the RAM each needs
   ./kfm.sh selectivity -t ABL1 -t GSK3B -l "CCO ethanol"
+
+To check the install yourself:
+  ./env/bin/python -m pytest tests/ -q
+
+To build on your own data (both run locally and transmit nothing):
+  ./kfm.sh buildnew --help           # fit on your data alone
+  ./kfm.sh extend   --help           # merge your data into a released model
+
+Both take gene symbols with what is already installed. Only raw amino-acid
+sequences for kinases the model has never seen need anything more:
+  ./env/bin/pip install -r requirements-sequences.txt
 
 To remove everything, delete this directory. Nothing else was touched.
 EOF

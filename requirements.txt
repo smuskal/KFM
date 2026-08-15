@@ -20,3 +20,11 @@ rdkit>=2024.3.1
 
 # Do NOT mix conda-forge rdkit with pip numpy/scipy in one environment; it breaks
 # scipy's extension modules. Pick one packaging system.
+
+# Unpinned, and here for a reason: environment.yml installs pytest, so the conda
+# path could run the suite and the venv fallback could not. Anyone who installs
+# without conda is exactly the person who most needs to verify the install, and
+# they hit "No module named pytest" at that moment. Kept unpinned to match
+# environment.yml -- tests/test_kfm.py compares only the constrained pins, so an
+# unpinned name in one file and not the other would not have been caught.
+pytest
