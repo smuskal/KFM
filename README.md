@@ -240,25 +240,55 @@ trained on, which needs the optional `requirements-sequences.txt`.
 
 ### 4️⃣ Reading the numbers
 
-**Confidence is not a calibrated probability** and does not transfer between
-distributions: 0.70 is right about 99% of the time on the training distribution
-and about 84% on held-out ChEMBL. Use it to rank and to threshold.
+**Headline accuracy, on unseen ChEMBL comparisons.** Potency ranks two compounds
+against one kinase at **69.3%**, over 1,836,100 comparisons. Selectivity picks
+which of two kinases prefers one compound at **75.3%**, over 3,137,588.
 
-**The two models' bands are not interchangeable** - different test sets. Read down
-a column, not across.
+Both rise if you act only on confident calls. This table is **cumulative**: it
+covers every comparison at or above the cutoff, which is what the published
+figures and the paper's Figure 3 report.
+
+| At strength 0.70 and above | Accuracy | Share of comparisons kept |
+|---|---|---|
+| Potency | 87.8% | 15.3% |
+| Selectivity | 92.3% | 36.8% |
+
+**Confidence is not a calibrated probability** and does not transfer between
+distributions. A 0.70 call is right about 98% of the time on the potency model's
+own training distribution and 99% on the selectivity model's, but 88% and 92%
+respectively on held-out ChEMBL. Set the cutoff from the test column of the model
+you are actually running.
+
+**Accuracy within each band** answers a different question from the cumulative
+table above, so the two do not match and neither is wrong. This one covers only
+the comparisons that land inside each strength range:
 
 | Confidence | Potency | Selectivity |
 |---|---|---|
-| 0.90 – 1.00 | 87.2% | 99.3% |
-| 0.80 – 0.90 | 85.0% | 96.4% |
-| 0.70 – 0.80 | 83.2% | 88.4% |
-| 0.60 – 0.70 | 74.6% | 74.4% |
-| 0.50 – 0.60 | 58.4% | 57.9% |
+| 0.90 – 1.00 | 89.3% | 99.3% |
+| 0.80 – 0.90 | 90.0% | 96.4% |
+| 0.70 – 0.80 | 87.0% | 88.4% |
+| 0.60 – 0.70 | 77.6% | 74.4% |
+| 0.50 – 0.60 | 60.3% | 57.9% |
 
-For potency, **52.7% of all comparisons land in that bottom band**. Accuracy also
-falls as chemistry gets newer: 0.726 when neither compound is new to the
-Knowledgebase, 0.673 when one is, and **0.582 when both are** - which is the
-screening case.
+Potency does not rise all the way here, and that is not a transcription error: it
+plateaus near 90% and its top band is thin, while selectivity keeps improving as
+confidence rises. Potency is measured the way this tool scores it, averaging both
+ligand orders.
+
+**The two columns are not interchangeable** - different test sets. Read down a
+column, not across.
+
+**Only 15.3% of potency comparisons reach 0.70 at all**, and **57.1% land in the
+bottom band**, so most of a potency run sits below the operating point and much
+of what sits below is barely better than a coin flip. Prediction strength is what
+tells you which part is which.
+
+Accuracy also falls as the chemistry gets newer. Scoring each test compound by
+its maximum Tanimoto similarity to the compounds the model was actually fitted
+on, potency runs at **57.6%** where both compounds are novel, below 0.35
+similarity, against **72.2%** where both are fingerprint-identical to a training
+compound. That novel corner is the screening case.
 
 Full limitations: **<https://kinasefoundationmodel.com/v2/limitations.html>**
 Method and every figure:
