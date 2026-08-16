@@ -131,6 +131,24 @@ A 16 GB laptop runs potency comfortably but **cannot load selectivity** - it wil
 swap and then be killed by the operating system. Both download either way; the
 installer warns before fetching something this machine cannot run.
 
+**Verifying the install.** `./install.sh` already checks itself: it scores the
+published worked examples and fails rather than reporting success if any has
+moved. If the install said it succeeded, those passed.
+
+The full suite ships with the repository:
+
+```bash
+./env/bin/python -m pytest tests/ -q
+```
+
+61 tests. Those needing a bundle skip with a reason when its weights are absent,
+so a default install should run all 61. **Skips mean a bundle is missing, not
+that everything is fine.** To run only the tests that need no weights:
+
+```bash
+./env/bin/python -m pytest tests/ -q -m "not needs_bundle"
+```
+
 <details>
 <summary><b>❌ "command not found: git" (click to expand)</b></summary>
 
@@ -240,28 +258,22 @@ trained on, which needs the optional `requirements-sequences.txt`.
 
 ### 4️⃣ Reading the numbers
 
-**Headline accuracy, on unseen ChEMBL comparisons.** Potency ranks two compounds
-against one kinase at **69.3%**, over 1,836,100 comparisons. Selectivity picks
-which of two kinases prefers one compound at **75.3%**, over 3,137,588.
+**Headline accuracy on unseen ChEMBL.** Potency ranks two compounds against one
+kinase at **69.3%** over 1,836,100 comparisons. Selectivity picks which of two
+kinases prefers one compound at **75.3%** over 3,137,588.
 
-Both rise if you act only on confident calls. This table is **cumulative**: it
-covers every comparison at or above the cutoff, which is what the published
-figures and the paper's Figure 3 report.
+Two tables follow. They answer different questions, so they do not match, and
+neither is wrong.
 
-| At strength 0.70 and above | Accuracy | Share of comparisons kept |
+**Cumulative** - every comparison at or above the cutoff. This is what the
+published figures and the paper's Figure 3 report:
+
+| At 0.70 and above | Accuracy | Comparisons kept |
 |---|---|---|
 | Potency | 87.8% | 15.3% |
 | Selectivity | 92.3% | 36.8% |
 
-**Confidence is not a calibrated probability** and does not transfer between
-distributions. A 0.70 call is right about 98% of the time on the potency model's
-own training distribution and 99% on the selectivity model's, but 88% and 92%
-respectively on held-out ChEMBL. Set the cutoff from the test column of the model
-you are actually running.
-
-**Accuracy within each band** answers a different question from the cumulative
-table above, so the two do not match and neither is wrong. This one covers only
-the comparisons that land inside each strength range:
+**Within each band** - only the comparisons landing inside that range:
 
 | Confidence | Potency | Selectivity |
 |---|---|---|
@@ -271,24 +283,24 @@ the comparisons that land inside each strength range:
 | 0.60 – 0.70 | 77.6% | 74.4% |
 | 0.50 – 0.60 | 60.3% | 57.9% |
 
-Potency does not rise all the way here, and that is not a transcription error: it
-plateaus near 90% and its top band is thin, while selectivity keeps improving as
-confidence rises. Potency is measured the way this tool scores it, averaging both
-ligand orders.
+Potency not rising all the way to the top is real, not a transcription error: it
+plateaus near 90% and its top band is thin. It is scored the way this tool scores
+it, averaging both ligand orders. **The columns are not interchangeable** -
+different test sets, so read down a column, not across.
 
-**The two columns are not interchangeable** - different test sets. Read down a
-column, not across.
+**Confidence is not a calibrated probability** and does not transfer between
+distributions. A 0.70 call is right about 98% of the time on the potency model's
+own training distribution and 99% on the selectivity model's, but 88% and 92% on
+held-out ChEMBL. Set the cutoff from the test figures for the model you are
+running.
 
-**Only 15.3% of potency comparisons reach 0.70 at all**, and **57.1% land in the
-bottom band**, so most of a potency run sits below the operating point and much
-of what sits below is barely better than a coin flip. Prediction strength is what
-tells you which part is which.
-
-Accuracy also falls as the chemistry gets newer. Scoring each test compound by
-its maximum Tanimoto similarity to the compounds the model was actually fitted
-on, potency runs at **57.6%** where both compounds are novel, below 0.35
-similarity, against **72.2%** where both are fingerprint-identical to a training
-compound. That novel corner is the screening case.
+Two cautions specific to potency. **Only 15.3% of comparisons reach 0.70 at all,
+and 57.1% land in the bottom band**, so most of a run sits below the operating
+point and much of that is barely better than a coin flip. And accuracy falls as
+the chemistry gets newer: scored by each test compound's maximum Tanimoto
+similarity to the compounds actually fitted on, potency runs at **57.6%** where
+both compounds are novel, below 0.35, against **72.2%** at fingerprint identity.
+That novel corner is the screening case.
 
 Full limitations: **<https://kinasefoundationmodel.com/v2/limitations.html>**
 Method and every figure:
@@ -572,13 +584,11 @@ gone.
 
 ### A note on SMILES in this document
 
-**Never truncate a SMILES.** Every structure in every example above is complete
-and can be copied and pasted straight into a shell, a notebook or the website.
-The same applies to the tool's own output, the emailed reports and the web
-pages: a clipped SMILES cannot be pasted back, cannot be checked against a
-notebook, and two different compounds can share their first forty characters -
-so an ellipsis loses the identity of the very thing being ranked. If a table is
-too wide, wrap it or let it scroll. Do not shorten the structure.
+**Never truncate a SMILES.** Every structure above is complete and pastes
+straight into a shell, a notebook or the website, and the same holds for the
+tool's output, the reports and the web pages. Two different compounds can share
+their first forty characters, so an ellipsis loses the identity of the very thing
+being ranked. If a table is too wide, wrap it or let it scroll.
 
 ### What the models were trained on
 
@@ -592,10 +602,6 @@ The KKB is a commercially licensed collection of curated kinase structure-activi
 data. It is the reason these models exist, the reason the weights are licensed
 separately from this code, and the thing to license if you want to go beyond
 research and evaluation use: **<https://eidogen-sertanty.com/kinasekbmarvin.php>**
-
-### Try it in a browser first
-
-<https://kinasefoundationmodel.com/v2/> - the same models, no install.
 
 ---
 
