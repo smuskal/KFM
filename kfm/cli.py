@@ -24,9 +24,13 @@ CUTOFF = 0.70
 # Measured accuracy per confidence band, from each model's own report. These are
 # NOT interchangeable: the two were evaluated on different test sets, and the
 # same confidence means something different on each.
+#
+# Potency is measured the way this tool scores, averaging both ligand orders.
+# The earlier figures here were single-order, which understated every band by
+# three to five points and described a scoring mode the tool never uses.
 BANDS = {
-    "potency":     [(0.90, "87.2%"), (0.80, "85.0%"), (0.70, "83.2%"),
-                    (0.60, "74.6%"), (0.00, "58.4%")],
+    "potency":     [(0.90, "89.3%"), (0.80, "90.0%"), (0.70, "87.0%"),
+                    (0.60, "77.6%"), (0.00, "60.3%")],
     "selectivity": [(0.90, "99.3%"), (0.80, "96.4%"), (0.70, "88.4%"),
                     (0.60, "74.4%"), (0.00, "57.9%")],
 }
