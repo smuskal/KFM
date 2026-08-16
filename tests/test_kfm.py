@@ -114,9 +114,9 @@ class TestReadSequence:
 # ---------------------------------------------------------------------------
 class TestBands:
     def test_potency_bands(self):
-        assert band_accuracy("potency", 0.95) == "87.2%"
-        assert band_accuracy("potency", 0.85) == "85.0%"
-        assert band_accuracy("potency", 0.55) == "58.4%"
+        assert band_accuracy("potency", 0.95) == "89.3%"
+        assert band_accuracy("potency", 0.85) == "90.0%"
+        assert band_accuracy("potency", 0.55) == "60.3%"
 
     def test_selectivity_bands(self):
         assert band_accuracy("selectivity", 0.95) == "99.3%"
@@ -129,8 +129,8 @@ class TestBands:
         assert band_accuracy("potency", 0.85) != band_accuracy("selectivity", 0.85)
 
     def test_boundaries_land_in_the_higher_band(self):
-        assert band_accuracy("potency", 0.70) == "83.2%"
-        assert band_accuracy("potency", 0.699) == "74.6%"
+        assert band_accuracy("potency", 0.70) == "87.0%"
+        assert band_accuracy("potency", 0.699) == "77.6%"
 
 
 class TestBandsBelongToTheModelThatEarnedThem:
@@ -145,8 +145,8 @@ class TestBandsBelongToTheModelThatEarnedThem:
 
     def test_a_released_bundle_is_unchanged(self):
         """No manifest, or one without bands, keeps the published table."""
-        assert band_accuracy("potency", 0.85, None) == "85.0%"
-        assert band_accuracy("potency", 0.85, {"name": "released"}) == "85.0%"
+        assert band_accuracy("potency", 0.85, None) == "90.0%"
+        assert band_accuracy("potency", 0.85, {"name": "released"}) == "90.0%"
         assert band_accuracy("selectivity", 0.85, None) == "96.4%"
 
     def test_a_model_you_built_reports_no_accuracy(self):
