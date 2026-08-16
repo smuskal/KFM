@@ -104,8 +104,9 @@ cd KFM
 
 That is the whole install. It builds a private environment in `./env`, downloads
 **both** version 2 models into `./kfm-models`, and then proves it works by
-scoring the published worked example - if bosutinib does not come back at 0.847
-against ABL1 it fails rather than reporting success.
+scoring the published worked example - if ranking bosutinib against the PP1-type
+compound on ABL1 does not put bosutinib first at 0.847, it fails rather than
+reporting success.
 
 Everything stays inside the `KFM` folder. No global environment is created or
 changed, nothing is written to your home directory, and deleting the folder

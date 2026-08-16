@@ -174,8 +174,8 @@ for m in "${MODELS[@]}"; do
     potency)
       OUT=$( cd "$HERE" && "$PY" -m kfm potency -t ABL1 -l "$BOS bosutinib" -l "$PP1 PP1-type" 2>&1 )
       echo "$OUT" | grep -q "0.847" \
-        || { echo "$OUT" | head -6; fail "potency: bosutinib did not score 0.847 against ABL1."; }
-      ok "  potency      bosutinib 0.847 vs ABL1 - matches the published report" ;;
+        || { echo "$OUT" | head -6; fail "potency: on ABL1, bosutinib did not rank above the PP1-type compound at 0.847."; }
+      ok "  potency      on ABL1, bosutinib over PP1-type 0.847 - matches the published report" ;;
     selectivity)
       OUT=$( cd "$HERE" && "$PY" -m kfm selectivity -t ABL1 -t GSK3B -l "$DAS dasatinib" 2>&1 )
       echo "$OUT" | grep -q "0.97" \
