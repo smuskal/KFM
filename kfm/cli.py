@@ -61,7 +61,12 @@ def band_accuracy(model: str, conf: float, manifest: dict | None = None) -> str 
                 "EXTENDED_MODEL_WARNING" in manifest or manifest.get("extensions"):
             return None
     if bands is None:
-        bands = BANDS[model]
+        # .get, not [], so a model name with no entry returns "nothing measured"
+        # instead of raising. Adding a third released model should not crash the
+        # CLI on a code path nobody thought to update.
+        bands = BANDS.get(model)
+        if bands is None:
+            return None
     for lo, acc in bands:
         if conf >= lo:
             return acc
@@ -290,6 +295,83 @@ def cmd_v1(args) -> int:
                  "ranking": payload}, text)
     return 0
 
+def cmd_verify(args) -> int:
+    """Replay a bundle's own reference cases and compare to its own answers.
+
+    Self-describing, which is the point. Asserting a literal like 0.847 checks
+    only that ONE particular released model is installed, and fails a perfectly
+    healthy model built by `buildnew` or any future release. Every bundle that
+    carries reference_cases.csv and reference_predictions.json can be checked
+    this way without the checker knowing which model it is looking at.
+    """
+    import csv as _csv
+    d = bundles.bundle_dir(args.model)
+    cases_p = os.path.join(d, "reference_cases.csv")
+    preds_p = os.path.join(d, "reference_predictions.json")
+    for f in (cases_p, preds_p):
+        if not os.path.exists(f):
+            print(f"{args.model}: no canary in this bundle ({os.path.basename(f)} "
+                  f"missing).\nBundles built before this was added carry none; "
+                  f"rebuild or download again.", file=sys.stderr)
+            return 2
+    want = json.load(open(preds_p))
+    rows = list(_csv.DictReader(open(cases_p)))
+    P = bundles.load_predict(args.model)
+
+    # Released bundles name the column `gene`; accept `target` too so a bundle
+    # written either way verifies.
+    def col(row, *names):
+        for k in names:
+            if k in row:
+                return row[k]
+        raise SystemExit(f"reference_cases.csv has none of {names}")
+
+    if args.model == "selectivity":
+        # COLUMN 1 is P(A preferred); column 0 is P(B). The potency bundle's
+        # compare_many returns (p, strength) instead, where element 0 IS p.
+        # The two disagree, so they are handled separately and deliberately.
+        m = P.SeqALigSeqB(d)
+        got = [float(r[1]) for r in m.compare_many_genes(
+            [(col(x, "gene_a", "target_a"), x["smiles"],
+              col(x, "gene_b", "target_b")) for x in rows])]
+    else:
+        m = P.load(d)
+        # Scored per target, but written back to the ORIGINAL row positions.
+        # Appending in group order silently permutes the answers, which then
+        # look like 45 of 50 mismatches on a perfectly good model.
+        got = [None] * len(rows)
+        by_t = {}
+        for i, x in enumerate(rows):
+            by_t.setdefault(col(x, "gene", "target"), []).append(i)
+        for tgt, idx in by_t.items():
+            out = P.compare_many(
+                m, [(rows[i]["smiles_a"], rows[i]["smiles_b"]) for i in idx],
+                gene=tgt)
+            for i, o in zip(idx, out):
+                got[i] = float(o[0]) if not isinstance(o, float) else float(o)
+
+    worst, bad = 0.0, 0
+    for i, g in enumerate(got):
+        exp = want.get(str(i))
+        if exp is None:
+            continue
+        delta = abs(g - float(exp))
+        worst = max(worst, delta)
+        if delta > args.tolerance:
+            bad += 1
+            if bad <= 5:
+                print(f"  case {i}: expected {exp}, got {g:.9f}", file=sys.stderr)
+    if bad:
+        print(f"{args.model}: {bad} of {len(got)} reference cases differ by more "
+              f"than {args.tolerance}. Largest {worst:.2e}.\nThe installed "
+              f"libraries are not the pinned ones, or the weights are not the "
+              f"ones this canary was written for.", file=sys.stderr)
+        return 1
+    print(f"{args.model}: {len(got)} reference cases reproduced "
+          f"(largest difference {worst:.2e})")
+    return 0
+
+
 def cmd_targets(args) -> int:
     P = bundles.load_predict(args.model)
     if args.model == "v1":
@@ -394,6 +476,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("v1", help="Version 1: predicted pIC50 against one kinase")
     common(p); p.set_defaults(fn=cmd_v1)
+
+    p = sub.add_parser("verify", help="Replay a bundle's own reference cases")
+    p.add_argument("model", choices=["v1", "potency", "selectivity"])
+    p.add_argument("--tolerance", type=float, default=1e-6)
+    p.set_defaults(fn=cmd_verify)
 
     p = sub.add_parser("targets", help="List the kinases a model covers")
     p.add_argument("model", choices=["v1", "potency", "selectivity"])
