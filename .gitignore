@@ -24,3 +24,9 @@ local-test/
 # Downloaded model bundles land here by default. Gigabytes, and separately
 # licensed: never commit them.
 kfm-models/
+
+# install.sh builds the environment here and downloads weights here. Neither
+# belongs in the repository, and `env/` in particular is tens of thousands of
+# files that a single `git add -A` would commit.
+env/
+kfm-models/

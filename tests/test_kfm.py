@@ -44,6 +44,54 @@ needs_selectivity = pytest.mark.skipif(
     reason="selectivity bundle not installed")
 
 
+def _is_released(model):
+    """Is the installed bundle THE released one, rather than one someone built.
+
+    The worked-example values below belong to a specific released model. A model
+    built by `buildnew`, or any future release, returns different numbers by
+    construction, so asserting them there fails a healthy bundle. Those tests are
+    skipped instead; `test_reproduces_its_own_reference_predictions` covers every
+    bundle, whichever it is.
+    """
+    if not bundles.is_present(model):
+        return False
+    try:
+        man = json.load(open(os.path.join(bundles.bundle_dir(model),
+                                          "MANIFEST.json")))
+    except Exception:                                        # noqa: BLE001
+        return False
+    return man.get("built_by") != "kfm_buildnew" and not man.get("extensions")
+
+
+released_potency = pytest.mark.skipif(
+    not _is_released("potency"),
+    reason="not the released potency bundle; its own canary is tested instead")
+released_selectivity = pytest.mark.skipif(
+    not _is_released("selectivity"),
+    reason="not the released selectivity bundle; its own canary is tested instead")
+
+
+@pytest.mark.needs_bundle
+@pytest.mark.parametrize("model", ["potency", "selectivity"])
+def test_reproduces_its_own_reference_predictions(model):
+    """Every bundle must reproduce the answers it shipped with.
+
+    This is the check that survives a new model. It reads the bundle's own
+    reference_cases.csv and reference_predictions.json rather than any literal,
+    so it is valid for the released models, for a version 3, and for a model a
+    user built themselves.
+    """
+    if not bundles.is_present(model):
+        pytest.skip(f"{model} bundle not installed")
+    d = bundles.bundle_dir(model)
+    if not os.path.exists(os.path.join(d, "reference_predictions.json")):
+        pytest.skip(f"{model} bundle predates the canary")
+    r = subprocess.run([sys.executable, "-m", "kfm", "verify", model],
+                       capture_output=True, text=True,
+                       cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
 # ---------------------------------------------------------------------------
 # Input parsing - no bundle needed
 # ---------------------------------------------------------------------------
@@ -254,6 +302,7 @@ def run_cli(*args):
 @needs_potency
 @pytest.mark.needs_bundle
 class TestPotencyNumbers:
+    @released_potency
     def test_worked_example_from_the_report(self):
         """ABL1, bosutinib vs the PP1-type compound.
 
@@ -295,6 +344,7 @@ class TestPotencyNumbers:
 @needs_selectivity
 @pytest.mark.needs_bundle
 class TestSelectivityNumbers:
+    @released_selectivity
     def test_worked_example_from_the_report(self):
         """ABL1 / dasatinib / GSK3B must give 0.9737 and 0.0263."""
         d = run_cli("selectivity", "-t", "ABL1", "-t", "GSK3B",

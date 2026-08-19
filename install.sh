@@ -169,23 +169,46 @@ BOS="COc1cc(Nc2c(cnc3cc(OCCCN4CCN(C)CC4)c(OC)cc23)C#N)c(Cl)cc1Cl"
 PP1="CC(C)n1nc(c2cccnc2)c3c(N)ncnc13"
 DAS="Cc1nc(Nc2ncc(s2)C(=O)Nc2c(C)cccc2Cl)cc(n1)N1CCN(CCO)CC1"
 
+# HOW THIS CHECK WORKS, AND WHY IT CHANGED
+#
+# Each bundle ships reference_cases.csv and reference_predictions.json: a sample
+# of comparisons and the answers that bundle gave for them. `kfm verify` replays
+# them and compares. That is self-describing, so it checks whatever model you
+# actually installed.
+#
+# The old check asserted the literals 0.847, 0.97 and 8.69. Those belong to the
+# current release and to nothing else, so any future model would have failed a
+# perfectly healthy install by construction. The worked example is still printed
+# below, because it is the number in the published report and people look for
+# it, but it is no longer what decides pass or fail.
+for m in "${MODELS[@]}"; do
+  if ( cd "$HERE" && "$PY" -m kfm verify "$m" >/dev/null 2>&1 ); then
+    ok "  $(printf '%-12s' "$m") reproduced this bundle's own reference cases"
+  else
+    ( cd "$HERE" && "$PY" -m kfm verify "$m" ) || true
+    fail "$m: this bundle did not reproduce its own reference predictions.
+        The installed libraries are not the pinned ones, or the download is
+        damaged. Delete ./kfm-models/$m and re-run."
+  fi
+done
+
 for m in "${MODELS[@]}"; do
   case "$m" in
     potency)
       OUT=$( cd "$HERE" && "$PY" -m kfm potency -t ABL1 -l "$BOS bosutinib" -l "$PP1 PP1-type" 2>&1 )
       echo "$OUT" | grep -q "0.847" \
-        || { echo "$OUT" | head -6; fail "potency: on ABL1, bosutinib did not rank above the PP1-type compound at 0.847."; }
-      ok "  potency      on ABL1, bosutinib over PP1-type 0.847 - matches the published report" ;;
+        && ok "  potency      on ABL1, bosutinib over PP1-type 0.847 - matches the published report" \
+        || echo "     (worked example differs from the published 0.847; expected if this is not the released model)" ;;
     selectivity)
       OUT=$( cd "$HERE" && "$PY" -m kfm selectivity -t ABL1 -t GSK3B -l "$DAS dasatinib" 2>&1 )
       echo "$OUT" | grep -q "0.97" \
-        || { echo "$OUT" | head -6; fail "selectivity: dasatinib did not prefer ABL1 at 0.97 over GSK3B."; }
-      ok "  selectivity  dasatinib prefers ABL1 0.97 over GSK3B - matches the report" ;;
+        && ok "  selectivity  dasatinib prefers ABL1 0.97 over GSK3B - matches the report" \
+        || echo "     (worked example differs from the published 0.97; expected if this is not the released model)" ;;
     v1)
       OUT=$( cd "$HERE" && "$PY" -m kfm v1 -t ABL1 -l "$BOS bosutinib" -l "$PP1 PP1-type" 2>&1 )
       echo "$OUT" | grep -q "8.69" \
-        || { echo "$OUT" | head -6; fail "v1: bosutinib did not score 8.69 against ABL1."; }
-      ok "  v1           bosutinib 8.69 vs ABL1 - matches the published report" ;;
+        && ok "  v1           bosutinib 8.69 vs ABL1 - matches the published report" \
+        || echo "     (worked example differs from the published 8.69; expected if this is not the released model)" ;;
   esac
 done
 

@@ -154,6 +154,107 @@ def stratified_chunks(usable, kind, n_chunks, seed):
     return [sorted(c) for c in out if c]
 
 
+# ---------------------------------------------------------------------------
+# What a bundle must carry to describe itself
+#
+# Three files, all written here, all absent before. Without them a model this
+# tool builds cannot answer the questions every released bundle is asked:
+# what did you see, what do you answer, and how accurate are you.
+# ---------------------------------------------------------------------------
+
+def write_training_record(out, smis, tgts):
+    """Record WHICH structures this model was fitted on, as digests.
+
+    Digests rather than structures, deliberately. A model fitted on licensed
+    data would otherwise ship the training set inside every download; a SHA-256
+    per canonical SMILES answers "was this molecule in training" without
+    disclosing a single structure. That question is what a prospective test
+    needs, and version 2 could not answer it, so its record had to be dug out of
+    a build sandbox afterwards.
+    """
+    import hashlib
+    digests = sorted(hashlib.sha256(s.encode()).hexdigest() for s in smis)
+    with open(os.path.join(out, "training_smiles.sha256"), "w") as fh:
+        fh.write("\n".join(digests) + "\n")
+    names = sorted({t[1] for t in tgts if t[0] == "gene"})
+    if names:
+        with open(os.path.join(out, "training_targets.txt"), "w") as fh:
+            fh.write("\n".join(names) + "\n")
+    return len(digests), len(names)
+
+
+def write_reference(out, rf, usable, smis, tgts, b, emb, seed, np, n=50):
+    """This model's own answers on a fixed sample of its training comparisons.
+
+    The canary. `install.sh` and the tests need something to check that does not
+    depend on which model is installed: a released bundle's worked example is
+    wrong for every other model by construction, so asserting 0.847 against a
+    version 3 fails a healthy build. Writing the model's own answers makes the
+    check self-describing.
+
+    Scored in BOTH orders and averaged, which is how the shipped predictors
+    behave; a single-order canary would not match what the tool later prints.
+    """
+    import csv
+    import random
+    rows = [r for r in usable if not r[5]]
+    if not rows:
+        return 0
+    rng = random.Random(seed)
+    pick = rows if len(rows) <= n else rng.sample(rows, n)
+    X, y, k = kx.design(pick, smis, tgts, b, emb)
+    c1 = int(np.where(rf.classes_ == 1)[0][0])
+    p = rf.predict_proba(X)[:, c1]
+    avg = 0.5 * (p[:k] + (1.0 - p[k:]))
+
+    # The two layouts carry different things in a row. For potency it is two
+    # ligands against one target; for selectivity one ligand against two
+    # targets. Writing potency's column names for a selectivity model would
+    # produce a canary nothing could replay.
+    with open(os.path.join(out, "reference_cases.csv"), "w", newline="") as fh:
+        w = csv.writer(fh)
+        if b.kind == "LSL":
+            w.writerow(["gene", "smiles_a", "smiles_b", "truth_a_wins"])
+            for (la, lb, ta, tb, lab, _t) in pick:
+                w.writerow([ta[1], la, lb, int(lab)])
+        else:
+            w.writerow(["gene_a", "gene_b", "smiles", "truth_a_wins"])
+            for (la, lb, ta, tb, lab, _t) in pick:
+                w.writerow([ta[1], tb[1], la, int(lab)])
+    json.dump({str(i): round(float(v), 9) for i, v in enumerate(avg)},
+              open(os.path.join(out, "reference_predictions.json"), "w"), indent=1)
+    return k
+
+
+def measure_bands(rf, rows, smis, tgts, b, emb, np):
+    """Accuracy within each strength band, for the manifest.
+
+    The CLI keeps a hardcoded table for the RELEASED models. A model built here
+    is not one of those, so without its own bands the tool either quotes another
+    model's accuracy or has nothing to say. Measured on a holdout, these become
+    the bundle's own `confidence_bands` and the CLI prefers them.
+
+    Bands are cumulative-free: each covers only the comparisons landing inside
+    it, which is what the CLI's table means.
+    """
+    if not rows:
+        return None
+    X, y, k = kx.design(rows, smis, tgts, b, emb)
+    c1 = int(np.where(rf.classes_ == 1)[0][0])
+    p = rf.predict_proba(X)[:, c1]
+    avg = 0.5 * (p[:k] + (1.0 - p[k:]))
+    correct = (avg > 0.5).astype(int) == y
+    strength = np.maximum(avg, 1.0 - avg)
+    out = []
+    for lo, hi in ((0.90, 1.01), (0.80, 0.90), (0.70, 0.80),
+                   (0.60, 0.70), (0.00, 0.60)):
+        m = (strength >= lo) & (strength < hi)
+        if m.sum() == 0:
+            continue
+        out.append([lo, f"{100.0 * correct[m].mean():.1f}%"])
+    return out or None
+
+
 def fit_pooled(usable, smis, tgts, b, emb, *, n_chunks, trees, leaf, seed, ckpt,
                RandomForestClassifier, joblib):
     """Fit in passes and pool the trees into one forest.
@@ -374,9 +475,47 @@ def main(argv=None):
     kx.log(f"\nwrote {dest} ({os.path.getsize(dest)/2**30:.2f} GB)")
     kx.log(f"  filename kept as {b.model_file} so the bundle's predict.py loads it")
 
+    # The bundle's own record and canary. Both are written unconditionally: a
+    # model with no canary cannot be verified after download, and one with no
+    # training record cannot support a prospective test next quarter.
+    n_dig, n_tgt = write_training_record(a.out, smis, tgts)
+    kx.log(f"wrote training_smiles.sha256 ({n_dig:,} structures)"
+           + (f" and training_targets.txt ({n_tgt:,} targets)" if n_tgt else ""))
+    n_ref = write_reference(a.out, rf, usable, smis, tgts, b, emb, a.seed, np)
+    kx.log(f"wrote reference_cases.csv and reference_predictions.json "
+           f"({n_ref} cases)")
+
+    # Confidence bands, when a holdout was supplied. Without one the manifest
+    # says so rather than borrowing the released models' table.
+    bands = None
+    hold = None
+    if a.holdout:
+        kx.log(f"\nholdout: {a.holdout}")
+        hold = kx.read_csv(a.holdout, b, have_emb, a.pairs_per_group, a.seed)
+        h, hs, ht, hd, hemb = hold
+        bands = measure_bands(rf, [r for r in h if not r[5]], hs, ht, b,
+                              hemb or emb, np)
+        if bands:
+            kx.log("  measured confidence bands on the holdout:")
+            for lo, acc in bands:
+                kx.log(f"    >= {lo:.2f}   {acc}")
+
     json.dump({
         "name": name,
         "model_file": b.model_file,
+        "confidence_bands": bands,
+        "training_record": {
+            "structures": "training_smiles.sha256",
+            "targets": "training_targets.txt" if n_tgt else None,
+            "algorithm": "sha256 of the canonical SMILES bytes, one per line, sorted",
+            "why_digests": ("So membership can be tested without shipping the "
+                            "training structures, which may be licensed."),
+            "count": n_dig},
+        "reference_predictions": {
+            "cases": "reference_cases.csv",
+            "predictions": "reference_predictions.json",
+            "count": n_ref,
+            "scoring": "both orders averaged, as the shipped predictors do"},
         "built_by": "kfm_buildnew",
         "PROVENANCE": ("Fitted from scratch on the contributor's own data. No KFM "
                        "weights were loaded, merged or consulted. The sequence vectors "
@@ -411,10 +550,13 @@ def main(argv=None):
         "model_sha256": kx._sha256(dest),
         "environment": {"python": sys.version.split()[0],
                         "scikit_learn": sklearn.__version__},
-        "MEASURED_PERFORMANCE": ("None. This model has never been evaluated by us. "
-                                 "Measure it on your own held-out comparisons before "
-                                 "quoting any number. Nothing about the released "
-                                 "models' accuracy applies to it."),
+        "MEASURED_PERFORMANCE": (
+            ("Confidence bands in this manifest were measured on the holdout you "
+             "supplied, and describe THIS model on THAT data. Nothing about the "
+             "released models' accuracy applies to it.") if bands else
+            ("None. This model has never been evaluated by us. Measure it on your "
+             "own held-out comparisons before quoting any number. Nothing about "
+             "the released models' accuracy applies to it.")),
         "COVERAGE_WARNING": ("A model fitted only on your data is weak on targets your "
                              "data does not cover, and more of your own data does not "
                              "fix that. Measured on a five-target contributor set: "
@@ -424,8 +566,7 @@ def main(argv=None):
     kx.log("wrote MANIFEST.json")
 
     if a.holdout:
-        kx.log(f"\nholdout: {a.holdout}")
-        h, hs, ht, hd, hemb = kx.read_csv(a.holdout, b, have_emb, a.pairs_per_group, a.seed)
+        h, hs, ht, hd, hemb = hold          # already read, above, for the bands
         hemb = hemb or emb
         c1 = int(np.where(rf.classes_ == 1)[0][0])
         mine, n = kx.score(rf, c1, h, hs, ht, b, hemb)
