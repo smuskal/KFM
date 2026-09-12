@@ -7,6 +7,14 @@ protein family for which you have sequences and paired activity data.
 This has been done end to end at least once, for GPCRs, using a ChEMBL pull of
 1.09M activity rows across 405 receptors.
 
+**That port is live at [gpcrfoundationmodel.com](https://gpcrfoundationmodel.com/).**
+It is the reference for what this document describes: the same two layouts, the
+same featuriser, the same swap, applied to G protein-coupled receptors. If you
+want to see what the finished article looks like before starting your own port,
+read its [methods page](https://gpcrfoundationmodel.com/methods.html) and its
+[limitations](https://gpcrfoundationmodel.com/limitations.html), which is the
+more instructive of the two.
+
 ## Who does what
 
 **You do not build comparisons. KFM does.** You supply one measurement per row

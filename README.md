@@ -38,6 +38,14 @@ install, hardware, and how to run, start to finish. **Most people want version
 >
 > **→ [`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md)** - written from an
 > end-to-end port of both layouts to GPCRs, 1.09M ChEMBL rows over 405 receptors.
+>
+> That port is now live and public at
+> **[gpcrfoundationmodel.com](https://gpcrfoundationmodel.com/)** - the same two
+> layouts over G protein-coupled receptors, with
+> [its own methods](https://gpcrfoundationmodel.com/methods.html),
+> [every receptor it covers](https://gpcrfoundationmodel.com/receptors.html) and
+> [its limitations](https://gpcrfoundationmodel.com/limitations.html). Use it as
+> a worked example of what a port to another family looks like when it is finished.
 
 ---
 
@@ -444,7 +452,9 @@ selectivity, which needs the same compound measured on two different targets.
 > **🧬 Another target family?** Nothing here is kinase-specific - the same two
 > commands build potency and selectivity models for any family from the same
 > measurement file. **[`docs/OTHER_FAMILIES.md`](docs/OTHER_FAMILIES.md)** has
-> the full procedure, from an end-to-end GPCR port.
+> the full procedure, from an end-to-end GPCR port, and
+> [gpcrfoundationmodel.com](https://gpcrfoundationmodel.com/) is that port running
+> in public.
 
 **Qualifiers invert on conversion.** Our `relation` describes the potency: `>`
 means at least this potent. ChEMBL and most assay exports put the qualifier on
