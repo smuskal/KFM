@@ -4,28 +4,26 @@ Run the Kinase Foundation Models locally, on your own machine, against your own
 compounds. Nothing is sent anywhere: the models run in your process.
 
 **Project home: <https://kinasefoundationmodel.com>** - the same models in the
-browser with no install, the research reports behind every number here, and each
-model's own limitations page:
-[version 2 overview](https://kinasefoundationmodel.com/v2/) ·
-[rank by potency](https://kinasefoundationmodel.com/v2/rank-lsl.html) ·
-[rank by selectivity](https://kinasefoundationmodel.com/v2/rank-sls.html) ·
-[v2 limitations](https://kinasefoundationmodel.com/v2/limitations.html) ·
-[v1 limitations](https://kinasefoundationmodel.com/v1/limitations.html)
+browser with no install, the research reports behind every number here, and the
+limitations page:
+[overview](https://kinasefoundationmodel.com/overview.html) ·
+[rank by potency](https://kinasefoundationmodel.com/rank-potency.html) ·
+[rank by selectivity](https://kinasefoundationmodel.com/rank-selectivity.html) ·
+[limitations](https://kinasefoundationmodel.com/limitations.html)
 
-Most current first; version 1 is kept below for continuity.
+**Model release: 12 August 2026.** Both models below come from that release, and
+every number quoted in this file was measured on it.
 
-| Released | Version | Question it answers | Command | Returns |
+| Released | Model | Question it answers | Command | Returns |
 |---|---|---|---|---|
-| **12 Aug 2026** | **Version 2 · potency** | Of these compounds, which is more potent against **one** kinase? | `kfm potency` | a **probability** that one beats another |
-| **12 Aug 2026** | **Version 2 · selectivity** | Of these kinases, which binds **one** compound more tightly? | `kfm selectivity` | a **probability** that one target prefers it |
-| **13 Aug 2026** | **Add-on · extend** | Can I add *my own* data to either v2 model, keeping the whole panel? | `kfm extend` | a **merged model** |
+| **12 Aug 2026** | **Potency** | Of these compounds, which is more potent against **one** kinase? | `kfm potency` | a **probability** that one beats another |
+| **12 Aug 2026** | **Selectivity** | Of these kinases, which binds **one** compound more tightly? | `kfm selectivity` | a **probability** that one target prefers it |
+| **13 Aug 2026** | **Add-on · extend** | Can I add *my own* data to either model, keeping the whole panel? | `kfm extend` | a **merged model** |
 | **13 Aug 2026** | **Add-on · buildnew** | Can I fit a model on *only* my data, using the same recipe? | `kfm buildnew` | a **model that is entirely yours** |
-| 3 Aug 2026 | Version 1 *(legacy)* | What pIC50 is predicted for this compound against one kinase? | `kfm v1` | a **number** on the pIC50 scale |
 
-**Version 1 and version 2 are separate models with separate downloads.**
-Installing one does not install the other. Each section below is self-contained:
-install, hardware, and how to run, start to finish. **Most people want version
-2** - it is the current release, and its section is open by default.
+The two models are separate downloads. Installing one does not install the
+other. Each section below is self-contained: install, hardware, and how to run,
+start to finish.
 
 [![Not working on kinases? Nothing in the method is kinase-specific. The same two commands build potency and selectivity models for any protein family, from one measurement per row.](docs/other-families-banner.png)](docs/OTHER_FAMILIES.md)
 
@@ -51,7 +49,7 @@ install, hardware, and how to run, start to finish. **Most people want version
 
 ## Licensing - the code and the weights differ
 
-| What | Licence |
+| What | License |
 |---|---|
 | Everything in this repository | **Apache 2.0** (`LICENSE`) |
 | The trained model weights, downloaded separately | **Research and evaluation only** (`LICENSE-MODELS.txt`) |
@@ -63,7 +61,7 @@ free for **academic and non-profit research and teaching**.
 
 Two limits apply to everyone, including academic and non-profit users:
 
-- **No licence to the Knowledgebase is granted.** This lets you *run* a model
+- **No license to the Knowledgebase is granted.** This lets you *run* a model
   trained on the KKB. It conveys no right to the KKB itself, to any part of it,
   or to any data in it. Access to the Knowledgebase is a separate commercial
   agreement.
@@ -82,16 +80,16 @@ full terms.
 
 <br>
 
-Both version 2 models are **classifiers**. They answer a comparison and return a
+Both models are **classifiers**. They answer a comparison and return a
 probability. **Neither returns a potency, an affinity, or a statement that a
 compound is active.** Read the ordering; use the confidence to decide which parts
 of it to act on.
 
-In both diagrams the encoder boxes are coloured by **role**: the two paired
+In both diagrams the encoder boxes are colored by **role**: the two paired
 inputs being compared are neutral, and the single shared input - the sequence for
 potency, the ligand for selectivity - is blue.
 
-![Potency model. Ligand A, one kinase sequence and ligand B enter a single random forest in that fixed order. Each ligand goes through a 1,024-bit Morgan count fingerprint plus 14 descriptors covering size, topology and composition; the sequence goes through ESM2, mean-pooled to 480 numbers. The forest returns the probability that ligand A is the more potent of the two, shown on a bar running from A binds tighter to B binds tighter with confidence marked at its centre. The worked case is bosutinib, measured pIC50 8.96, against a pyrazolo[3,4-d]pyrimidine at 4.50, on the ABL1 kinase domain, RCSB 3UE4.](docs/arch-potency-20260812.png)
+![Potency model. Ligand A, one kinase sequence and ligand B enter a single random forest in that fixed order. Each ligand goes through a 1,024-bit Morgan count fingerprint plus 14 descriptors covering size, topology and composition; the sequence goes through ESM2, mean-pooled to 480 numbers. The forest returns the probability that ligand A is the more potent of the two, shown on a bar running from A binds tighter to B binds tighter with confidence marked at its center. The worked case is bosutinib, measured pIC50 8.96, against a pyrazolo[3,4-d]pyrimidine at 4.50, on the ABL1 kinase domain, RCSB 3UE4.](docs/arch-potency-20260812.png)
 
 *Potency - ligand A, the sequence, ligand B, as one row. Every pair is scored in
 both ligand orders and averaged.*
@@ -111,7 +109,7 @@ cd KFM
 ```
 
 That is the whole install. It builds a private environment in `./env`, downloads
-**both** version 2 models into `./kfm-models`, and then proves it works by
+**both** models into `./kfm-models`, and then proves it works by
 scoring the published worked example - if ranking bosutinib against the PP1-type
 compound on ABL1 does not put bosutinib first at 0.847, it fails rather than
 reporting success.
@@ -123,11 +121,10 @@ Python's own `venv` when it cannot.
 
 | Command | Installs |
 |---|---|
-| `./install.sh` | both version 2 models |
+| `./install.sh` | both models |
 | `./install.sh potency` | potency only |
-| `./install.sh all` | version 2 and the legacy version 1 |
 
-**Requirements.** Python 3.10–3.12, Intel or Apple Silicon, Linux, macOS or
+**Requirements.** Python 3.10 - 3.12, Intel or Apple Silicon, Linux, macOS or
 Windows. **RAM is the real constraint** - these forests expand about sevenfold
 when loaded:
 
@@ -286,11 +283,11 @@ published figures and the paper's Figure 3 report:
 
 | Confidence | Potency | Selectivity |
 |---|---|---|
-| 0.90 – 1.00 | 89.3% | 99.3% |
-| 0.80 – 0.90 | 90.0% | 96.4% |
-| 0.70 – 0.80 | 87.0% | 88.4% |
-| 0.60 – 0.70 | 77.6% | 74.4% |
-| 0.50 – 0.60 | 60.3% | 57.9% |
+| 0.90 - 1.00 | 89.3% | 99.3% |
+| 0.80 - 0.90 | 90.0% | 96.4% |
+| 0.70 - 0.80 | 87.0% | 88.4% |
+| 0.60 - 0.70 | 77.6% | 74.4% |
+| 0.50 - 0.60 | 60.3% | 57.9% |
 
 Potency not rising all the way to the top is real, not a transcription error: it
 plateaus near 90% and its top band is thin. It is scored the way this tool scores
@@ -311,10 +308,10 @@ similarity to the compounds actually fitted on, potency runs at **57.6%** where
 both compounds are novel, below 0.35, against **72.2%** at fingerprint identity.
 That novel corner is the screening case.
 
-Full limitations: **<https://kinasefoundationmodel.com/v2/limitations.html>**
+Full limitations: **<https://kinasefoundationmodel.com/limitations.html>**
 Method and every figure:
-[potency report](https://kinasefoundationmodel.com/v2/reports/LigASeqLigB_v2_potency.html) ·
-[selectivity report](https://kinasefoundationmodel.com/v2/reports/SeqALigSeqB_v2_selectivity.html)
+[potency report](https://kinasefoundationmodel.com/reports/LigASeqLigB_v2_potency.html) ·
+[selectivity report](https://kinasefoundationmodel.com/reports/SeqALigSeqB_v2_selectivity.html)
 
 </details>
 
@@ -332,7 +329,7 @@ Two utilities. Both run entirely on your machine; no data is transmitted.
 | what it does | merges trees fitted on your data into a released model | fits a model on your data alone |
 | KFM weights | loaded and merged | none loaded |
 | coverage | the whole 500-kinase panel | your targets only |
-| licence | `LICENSE-MODELS.txt` §3(d) | no KFM encumbrance |
+| license | `LICENSE-MODELS.txt` §3(d) | no KFM encumbrance |
 
 Measured on a contributor with 119,660 comparisons across five targets:
 
@@ -477,59 +474,6 @@ specification and validation record:
 
 </details>
 
-<details>
-<summary><b>▶︎ VERSION 1 - a predicted pIC50 value (click to expand)</b></summary>
-
-<br>
-
-Version 1 is a **regression**. It scores one kinase-ligand pair at a time and
-returns a number on the pIC50 scale.
-
-![Version 1: an ABL1 kinase sequence is encoded by ESM2 into 480 numbers and each compound into a fingerprint plus size and atom counts; the same fitted random forest scores kinase plus ligand A and kinase plus ligand B in two independent runs, and a comparison wrapper subtracts the scores to decide which binds tighter.](docs/arch-v1.png)
-
-The forest sees one kinase vector and one ligand per prediction, **never both
-ligands together**. Comparing two compounds means subtracting two independent
-scores, which is the weakness version 2 was built to remove. Only the
-**validated** arm is published; the frontier arm was fitted on every measurement
-with nothing held back, so no honest accuracy exists for it.
-
-### Install and run
-
-```bash
-git clone https://github.com/smuskal/KFM.git
-cd KFM
-./install.sh v1
-```
-
-0.86 GB to download, **6.4 GB of RAM** to run - comfortable on a 16 GB laptop.
-Use `./install.sh all` to get version 1 alongside both version 2 models.
-
-```bash
-./kfm.sh v1 --target ABL1 \
-  -l "COc1cc(Nc2c(cnc3cc(OCCCN4CCN(C)CC4)c(OC)cc23)C#N)c(Cl)cc1Cl bosutinib" \
-  -l "CC(C)n1nc(c2cccnc2)c3c(N)ncnc13 PP1-type"
-```
-
-```
-Version 1 - predicted pIC50 against ABL1
-
-#  Compound   pIC50  SMILES
--  ---------  -----  -----------------------------------------------------------
-1  bosutinib   8.69  COc1cc(Nc2c(cnc3cc(OCCCN4CCN(C)CC4)c(OC)cc23)C#N)c(Cl)cc1Cl
-2  PP1-type    4.78  CC(C)n1nc(c2cccnc2)c3c(N)ncnc13
-```
-
-### Reading version 1 numbers
-
-- **Not comparable between kinases.** Each target is on its own scale, so the
-  difference between two targets' scores reports scale differences as if they
-  were selectivity. Use version 2 selectivity for that question.
-- **Per-target accuracy ranges from 0.09 to 0.83** - strong on some kinases, no
-  better than chance on others. Check the per-target figure before trusting a
-  result.
-
-</details>
-
 ---
 
 ## Shared reference
@@ -624,6 +568,6 @@ research and evaluation use: **<https://eidogen-sertanty.com/kinasekbmarvin.php>
 
 The architecture diagrams in `docs/` are © 2026 Eidogen-Sertanty, Inc., all
 rights reserved, included for documentation and **not** covered by the Apache
-licence on the code. See `NOTICE`.
+license on the code. See `NOTICE`.
 
 © 2026 Eidogen-Sertanty, Inc.
