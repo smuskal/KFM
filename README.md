@@ -547,11 +547,28 @@ being ranked. If a table is too wide, wrap it or let it scroll.
 
 ### What the models were trained on
 
-All three models were fitted on the
+Both models were fitted on the
 **[Eidogen-Sertanty Kinase Knowledgebase (KKB)](https://eidogen-sertanty.com/kinasekbmarvin.php)** - and on nothing else.
 No ChEMBL, no BindingDB, no other source went into training; ChEMBL was used
 exclusively as an unseen test set, which is where every accuracy figure quoted
 here comes from.
+
+| Quantity | Potency | Selectivity |
+|---|---|---|
+| Measurements pulled from the KKB | 841,187 | 841,187 |
+| Measurements retained after featurization | 840,692 | 841,094 |
+| Distinct ligands | 302,999 | 99,739 |
+| Distinct target sequences | 733 | 728 |
+| **Comparisons the forest was fitted on** | **15,256,017** | **4,340,117** |
+| Rows after the label-reversal swap | 40,056,452 | 8,680,234 |
+| Held-out ChEMBL comparisons scored | 1,836,100 | 3,137,588 |
+| Targets covered by that test | 477 | 482 |
+
+A comparison is built from a pair of measurements, so the comparison counts run
+far ahead of the measurement count: one kinase measured against 1,000 compounds
+yields 499,500 ordered pairs from 1,000 experiments. Targets are keyed by
+sequence, so a mutant is a target in its own right. Any test comparison whose
+exact target and ligand pair appears in training is removed before scoring.
 
 The KKB is a commercially licensed collection of curated kinase structure-activity
 data. It is the reason these models exist, the reason the weights are licensed
@@ -562,7 +579,7 @@ research and evaluation use: **<https://eidogen-sertanty.com/kinasekbmarvin.php>
 
 ## Citing
 
-> Kinase Foundation Model (v1 / v2), Eidogen-Sertanty, Inc., 2026.
+> Kinase Foundation Model, Eidogen-Sertanty, Inc., 2026. Model release 12 August 2026.
 > Trained on the Eidogen-Sertanty Kinase Knowledgebase (https://eidogen-sertanty.com/kinasekbmarvin.php).
 > https://kinasefoundationmodel.com
 
