@@ -21,6 +21,10 @@ every number quoted in this file was measured on it.
 | **13 Aug 2026** | **Add-on · extend** | Can I add *my own* data to either model, keeping the whole panel? | `kfm extend` | a **merged model** |
 | **13 Aug 2026** | **Add-on · buildnew** | Can I fit a model on *only* my data, using the same recipe? | `kfm buildnew` | a **model that is entirely yours** |
 
+"More potent" spans binding affinity and functional potency together. A
+comparison is always between two readings of the same kind, so the answer orders
+like with like rather than claiming anything about binding in particular.
+
 The two models are separate downloads. Installing one does not install the
 other. Each section below is self-contained: install, hardware, and how to run,
 start to finish.
@@ -89,7 +93,7 @@ In both diagrams the encoder boxes are colored by **role**: the two paired
 inputs being compared are neutral, and the single shared input - the sequence for
 potency, the ligand for selectivity - is blue.
 
-![Potency model. Ligand A, one kinase sequence and ligand B enter a single random forest in that fixed order. Each ligand goes through a 1,024-bit Morgan count fingerprint plus 14 descriptors covering size, topology and composition; the sequence goes through ESM2, mean-pooled to 480 numbers. The forest returns the probability that ligand A is the more potent of the two, shown on a bar running from A binds tighter to B binds tighter with confidence marked at its center. The worked case is bosutinib, measured pIC50 8.96, against a pyrazolo[3,4-d]pyrimidine at 4.50, on the ABL1 kinase domain, RCSB 3UE4.](docs/arch-potency-20260812.png)
+![Potency model. Ligand A, one kinase sequence and ligand B enter a single random forest in that fixed order. Each ligand goes through a 1,024-bit Morgan count fingerprint plus 14 descriptors covering size, topology and composition; the sequence goes through ESM2, mean-pooled to 480 numbers. The forest returns the probability that ligand A is the more potent of the two, shown on a bar running from more potent at A to more potent at B with confidence marked at its center. The worked case is bosutinib, measured pIC50 8.96, against a pyrazolo[3,4-d]pyrimidine at 4.50, on the ABL1 kinase domain, RCSB 3UE4.](docs/arch-potency-20260812.png)
 
 *Potency - ligand A, the sequence, ligand B, as one row. Every pair is scored in
 both ligand orders and averaged.*
