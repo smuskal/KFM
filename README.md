@@ -16,8 +16,8 @@ every number quoted in this file was measured on it.
 
 | Released | Model | Question it answers | Command | Returns |
 |---|---|---|---|---|
-| **12 Aug 2026** | **Potency** | Of these compounds, which is more potent against **one** kinase? | `kfm potency` | a **probability** that one beats another |
-| **12 Aug 2026** | **Selectivity** | Of these kinases, which binds **one** compound more tightly? | `kfm selectivity` | a **probability** that one target prefers it |
+| **12 Aug 2026** | **Potency** | Of these compounds, which is more potent against **one** kinase? | `kfm potency` | which compound wins, with a **strength** |
+| **12 Aug 2026** | **Selectivity** | Of these kinases, at which is **one** compound more potent? | `kfm selectivity` | which kinase wins, with a **strength** |
 | **13 Aug 2026** | **Add-on · extend** | Can I add *my own* data to either model, keeping the whole panel? | `kfm extend` | a **merged model** |
 | **13 Aug 2026** | **Add-on · buildnew** | Can I fit a model on *only* my data, using the same recipe? | `kfm buildnew` | a **model that is entirely yours** |
 
@@ -32,7 +32,7 @@ start to finish.
 [![Not working on kinases? Nothing in the method is kinase-specific. The same two commands build potency and selectivity models for any protein family, from one measurement per row.](docs/other-families-banner.png)](docs/OTHER_FAMILIES.md)
 
 > [!TIP]
-> The featuriser, the pairwise formulation, the label-reversal swap, the
+> The featurizer, the pairwise formulation, the label-reversal swap, the
 > censored-value logic and the forest work on any protein family for which you
 > have sequences and activity data. Give `kfm buildnew` one measurement per row -
 > `smiles`, `sequence`, `pic50` - and it builds the comparisons for you, for
@@ -45,9 +45,13 @@ start to finish.
 > **[gpcrfoundationmodel.com](https://gpcrfoundationmodel.com/)** - the same two
 > layouts over G protein-coupled receptors, with
 > [its own methods](https://gpcrfoundationmodel.com/methods.html),
-> [every receptor it covers](https://gpcrfoundationmodel.com/receptors.html) and
+> [every target it covers](https://gpcrfoundationmodel.com/targets.html) and
 > [its limitations](https://gpcrfoundationmodel.com/limitations.html). Use it as
 > a worked example of what a port to another family looks like when it is finished.
+>
+> **[familyfoundationmodel.com](https://familyfoundationmodel.com/)** is the broad
+> instrument beside both: two separately fitted models over 34 protein families,
+> trained on ChEMBL 37 alone, with the same two layouts.
 
 ---
 
@@ -84,8 +88,8 @@ full terms.
 
 <br>
 
-Both models are **classifiers**. They answer a comparison and return a
-probability. **Neither returns a potency, an affinity, or a statement that a
+Both models are **classifiers**. They answer a comparison with an ordering
+and a strength. **Neither returns a potency, an affinity, or a statement that a
 compound is active.** Read the ordering; use the confidence to decide which parts
 of it to act on.
 
@@ -115,7 +119,7 @@ cd KFM
 That is the whole install. It builds a private environment in `./env`, downloads
 **both** models into `./kfm-models`, and then proves it works by
 scoring the published worked example - if ranking bosutinib against the PP1-type
-compound on ABL1 does not put bosutinib first at 0.847, it fails rather than
+compound on ABL1 does not put bosutinib first at 0.85, it fails rather than
 reporting success.
 
 Everything stays inside the `KFM` folder. No global environment is created or
@@ -213,7 +217,7 @@ Potency ranking against ABL1
 Same columns, same order, same values as the website for the same input. The
 command line and the page are two views of one run.
 
-**Score** is the mean probability a compound is the more potent of a pair, across
+**Score** is how often a compound comes out the more potent of a pair, averaged across
 every comparison it took part in. It is *relative to the compounds you supplied* -
 change the rivals and it changes.
 
@@ -242,7 +246,7 @@ because 45 comparisons per compound stops being readable.
 
 **0.50 means no preference** - across a row the scores average to exactly 0.50 by
 construction, so the signal is distance from it. And **a preferred side is not
-activity**: the probabilities sum to 1, so something always wins, including for a
+activity**: every comparison names a winner, so something always wins, including for a
 compound that binds nothing.
 
 These example files carry the measured answer in each compound's name, so you can
@@ -397,7 +401,7 @@ interrupted run resumes instead of restarting.
 
 **Chunking is a memory trade, not a free win.** Each tree sees one chunk, so with
 your data held fixed more chunks means weaker trees. On a 40,402 comparison set,
-holdout accuracy fell from 0.769 in one chunk to 0.708 in twenty. Use the fewest
+holdout accuracy fell from 0.77 in one chunk to 0.71 in twenty. Use the fewest
 chunks your memory allows, which is what the automatic choice does. Chunking pays
 when it lets you fit data that would not fit at all.
 
@@ -440,7 +444,7 @@ above. In place of the two values you may give a single `winner` column of `A`
 or `B`. A file holding these columns is never reinterpreted as measurements.
 
 **What the tools do to it.** Duplicates are collapsed by median. Which member is
-A is randomised, so the forest cannot learn to score by reading a slot. Every
+A is randomized, so the forest cannot learn to score by reading a slot. Every
 usable comparison is then entered twice, once in each order with the label
 inverted, so do not supply both orders yourself. `--pairs-per-group` (default
 5,000) stops one deeply screened target dominating.
