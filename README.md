@@ -132,7 +132,7 @@ Python's own `venv` when it cannot.
 | `./install.sh` | both models |
 | `./install.sh potency` | potency only |
 
-**Requirements.** Python 3.10 - 3.12, Intel or Apple Silicon, Linux, macOS or
+**Requirements.** Python 3.10 to 3.13, Intel or Apple Silicon, Linux, macOS or
 Windows. **RAM is the real constraint** - these forests expand about sevenfold
 when loaded:
 

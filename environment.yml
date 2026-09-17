@@ -36,12 +36,13 @@ dependencies:
       - scikit-learn==1.7.2
       - numpy==2.2.6
       - joblib==1.5.3
-      # NOT pinned: rdkit published its last x86_64 macOS wheel at 2025.9.3,
-      # so an exact pin makes this file uninstallable on Intel Macs and on
-      # Apple Silicon running an Intel Python under Rosetta. rdkit never
-      # touches the pickled forest; 2025.03.6 and 2025.09.5 were verified to
-      # give predictions identical to ten decimal places.
-      - rdkit>=2024.3.1
+      # A RANGE, not an exact pin: rdkit published its last x86_64 macOS wheel
+      # at 2025.9.3, so an exact pin makes this file uninstallable on Intel Macs
+      # and on Apple Silicon running an Intel Python under Rosetta. The ceiling
+      # keeps installs on releases measured to compute identical features:
+      # from 2025.09.6 a fully deuterated methyl stops counting as a rotatable
+      # bond. See requirements.txt for the full reason.
+      - rdkit>=2024.3.6,<=2025.9.5
       - pytest
       # Only needed to score a protein sequence the model was not trained on;
       # the shipped kinases need none of it. Uncomment to enable that path.

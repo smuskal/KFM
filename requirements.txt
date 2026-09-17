@@ -5,18 +5,29 @@ scikit-learn==1.7.2
 numpy==2.2.6
 joblib==1.5.3
 
-# rdkit is deliberately NOT pinned to one release, and it is the only one here
-# that is not. It never touches the pickled forest -- it computes the Morgan
-# count fingerprint and the descriptors, which are stable across releases.
-# Verified: rdkit 2025.03.6 and 2025.09.5 return predictions identical to ten
-# decimal places on the same bundle.
+# rdkit is a RANGE rather than one release, and it is the only one here that is
+# not an exact pin. It never touches the pickled forest; it computes the Morgan
+# count fingerprint and the descriptors. Releases 2024.03.6 through 2025.09.5
+# compute byte-identical ligand features, verified on 3,285 structures, and
+# 2025.03.6 and 2025.09.5 return predictions identical to ten decimal places on
+# the same bundle.
+#
+# The CEILING is for reproducibility. From 2025.09.6 RDKit no longer counts a
+# fully deuterated methyl as a rotatable bond, which is the more correct
+# convention, but the models encode the earlier one, so NumRotatableBonds moves
+# for isotope-labeled compounds. The bundle reference replay cannot see it, since
+# no reference case carries an isotope. `python -m kfm.rdkit_check`, which
+# install.sh runs, does see it. Re-measure before raising the ceiling.
+#
+# The FLOOR is 2024.3.6 rather than 2024.3.1 because 2024.3.1 raises
+# "_ARRAY_API not found" against numpy 2.2.6.
 #
 # Pinning it broke installation outright on x86_64 macOS, where rdkit stopped
 # publishing wheels after 2025.9.3. That includes Apple Silicon machines running
 # an Intel Python under Rosetta, which is easy not to notice. Check yours with:
 #   python -c "import platform; print(platform.machine())"
 # arm64 is native, x86_64 is Intel or Rosetta. Both work with the floor below.
-rdkit>=2024.3.1
+rdkit>=2024.3.6,<=2025.9.5
 
 # Do NOT mix conda-forge rdkit with pip numpy/scipy in one environment; it breaks
 # scipy's extension modules. Pick one packaging system.

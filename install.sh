@@ -114,16 +114,30 @@ else
         or re-run as:  KFM_FORCE_VENV=1 ./install.sh ${MODELS[*]}"
   else
     say "1/4  using python's built-in venv in ./env"
+    # The version is CHECKED, not assumed from the name. A machine whose only
+    # python3 is 3.14 built a 3.14 environment, where numpy 2.2.6 has no wheel
+    # and the install failed at pip with nothing pointing at the cause. venv and
+    # ensurepip are checked too, because a distribution python often ships
+    # without them and the failure names an apt package rather than the problem.
     PY=""
-    for c in python3.12 python3.11 python3.10 python3; do
-      command -v "$c" >/dev/null 2>&1 && { PY="$c"; break; }
+    for c in ${KFM_PYTHON:-} python3.12 python3.13 python3.11 python3.10 python3; do
+      command -v "$c" >/dev/null 2>&1 || continue
+      if "$c" -c 'import ensurepip, sys, venv
+sys.exit(0 if (3, 10) <= sys.version_info[:2] <= (3, 13) else 1)' >/dev/null 2>&1; then
+        PY="$c"; break
+      fi
     done
-    [ -n "$PY" ] || fail "no python 3.10-3.12 found on PATH.
-        Install Python from https://www.python.org/downloads/ and open a new terminal."
+    [ -n "$PY" ] || fail "no usable python 3.10 to 3.13 found on PATH.
+        Install Python 3.12 from https://www.python.org/downloads/ and open a new
+        terminal, or point KFM_PYTHON at one:  KFM_PYTHON=/path/to/python3.12 ./install.sh"
     "$PY" -m venv "$ENVDIR" || fail "could not create a virtual environment."
     "$ENVDIR/bin/pip" install --quiet --upgrade pip
     "$ENVDIR/bin/pip" install --quiet -r "$HERE/requirements.txt" \
-      || fail "pip could not install the pinned libraries."
+      || fail "pip could not install the pinned libraries.
+        $("$ENVDIR/bin/python" -VV 2>&1 | head -1)
+        $("$ENVDIR/bin/python" -c 'import platform; print(\"machine\", platform.machine())' 2>&1)
+        Upgrade pip first, then re-run. On a Mac, machine x86_64 means an Intel
+        python; a native arm64 python is the usual fix."
   fi
 fi
 
@@ -150,6 +164,18 @@ print(f"  numpy        {numpy.__version__}")
 print(f"  joblib       {joblib.__version__}")
 print(f"  rdkit        {rdkit.__version__}")
 PYCODE
+
+# The bundle reference replay in step 4 cannot see every encoder change: no
+# reference case carries a hydrogen isotope, and from rdkit 2025.09.6 a fully
+# deuterated methyl stops counting as a rotatable bond. This checks the ligand
+# features directly, before anything is downloaded.
+if ! "$PY" -m kfm.rdkit_check >/tmp/kfm_rdkit_check.log 2>&1; then
+  cat /tmp/kfm_rdkit_check.log >&2
+  fail "this rdkit computes different ligand features from the ones the models
+        were fitted on. Install the pinned range in requirements.txt rather than
+        an rdkit already on this machine."
+fi
+ok "  rdkit        computes the ligand features the models were fitted on"
 
 # --- 3. the models, one after another ---------------------------------------
 say "3/4  downloading ${#MODELS[@]} model(s) into ./kfm-models"
